@@ -1,4 +1,5 @@
 const ProviderProfile = require('../models/ProviderProfile');
+const User = require('../models/User');
 const Service = require('../models/Service');
 const ServiceRequest = require('../models/ServiceRequest');
 const Review = require('../models/Review');
@@ -160,6 +161,14 @@ const updateMyProviderProfile = asyncHandler(async (req, res) => {
     updates.coverImageUrl = saveProviderImage(req.body.coverImageFile);
   }
 
+  if (req.body.name !== undefined) {
+    await User.findByIdAndUpdate(
+      req.user._id,
+      { name: String(req.body.name).trim() || req.user.name },
+      { runValidators: true }
+    );
+  }
+
   const profile = await ProviderProfile.findOneAndUpdate(
     { user: req.user._id },
     {
@@ -169,7 +178,8 @@ const updateMyProviderProfile = asyncHandler(async (req, res) => {
     { new: true, runValidators: true, upsert: true, setDefaultsOnInsert: true }
   );
 
-  res.json({ profile });
+  const populatedProfile = await profile.populate('user', 'name email phone status');
+  res.json({ profile: populatedProfile });
 });
 
 const submitMyKyc = asyncHandler(async (req, res) => {
@@ -261,7 +271,7 @@ const calculateDistanceKm = (lat1, lng1, lat2, lng2) => {
 };
 
 const createService = asyncHandler(async (req, res) => {
-  const { title, category, description, priceLabel, durationLabel, packageType, includes } = req.body;
+  const { title, category, description, priceLabel, durationLabel, packageType, includes, isActive } = req.body;
 
   if (!title || !category || !description) {
     res.status(400);
@@ -277,6 +287,7 @@ const createService = asyncHandler(async (req, res) => {
     durationLabel,
     packageType,
     includes,
+    isActive,
   });
 
   res.status(201).json({ service });
@@ -386,7 +397,7 @@ const claimRequest = asyncHandler(async (req, res) => {
 });
 
 const updateAssignedRequestStatus = asyncHandler(async (req, res) => {
-  const { status } = req.body;
+  const { status, note = '' } = req.body;
 
   if (!['assigned', 'in_progress', 'completed', 'cancelled'].includes(status)) {
     res.status(400);
@@ -401,7 +412,7 @@ const updateAssignedRequestStatus = asyncHandler(async (req, res) => {
         statusHistory: {
           status,
           changedBy: req.user._id,
-          note: `Provider moved request to ${status}`,
+          note: note || `Provider moved request to ${status}`,
         },
       },
     },
@@ -423,7 +434,9 @@ const updateAssignedRequestStatus = asyncHandler(async (req, res) => {
   await createNotification({
     user: request.serviceTaker?._id || request.serviceTaker,
     title: 'Request updated',
-    message: `Your request is now ${status}.`,
+    message: note
+      ? `Your request is now ${status}: ${note}`
+      : `Your request is now ${status}.`,
     type: 'request',
     link: '/taker/requests',
   });
