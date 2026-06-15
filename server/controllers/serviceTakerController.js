@@ -12,6 +12,7 @@ const saveImageUpload = require('../utils/saveImageUpload');
 const createRequest = asyncHandler(async (req, res) => {
   const { provider, category, title, description, city, address, preferredDate, preferredTimeSlot, budgetLabel, sourceService, imageFile } = req.body;
   let { imageUrl = '' } = req.body;
+  let providerUser = provider || null;
 
   if (!category || !title || !description || !city) {
     res.status(400);
@@ -20,9 +21,19 @@ const createRequest = asyncHandler(async (req, res) => {
 
   if (imageFile?.dataUrl) imageUrl = saveRequestImage(imageFile);
 
+  if (providerUser) {
+    const providerProfile = await ProviderProfile.findOne({
+      $or: [
+        { user: providerUser },
+        { _id: providerUser },
+      ],
+    });
+    providerUser = providerProfile?.user || providerUser;
+  }
+
   const request = await ServiceRequest.create({
     serviceTaker: req.user._id,
-    provider,
+    provider: providerUser,
     category,
     title,
     description,
@@ -34,12 +45,12 @@ const createRequest = asyncHandler(async (req, res) => {
     imageUrl,
     issueImages: imageUrl ? [imageUrl] : [],
     sourceService,
-    status: provider ? 'assigned' : 'open',
+    status: providerUser ? 'assigned' : 'open',
   });
 
-  if (provider) {
+  if (providerUser) {
     await createNotification({
-      user: provider,
+      user: providerUser,
       title: 'New direct request',
       message: `${req.user.name} sent you a ${category} request.`,
       type: 'request',

@@ -52,6 +52,11 @@ const getProviderUserId = (provider) => {
   return (user?._id || user || '').toString();
 };
 
+const getCurrentProviderIds = async (userId) => {
+  const profile = await ProviderProfile.findOne({ user: userId }).select('_id');
+  return [userId, profile?._id].filter(Boolean);
+};
+
 const listProviders = asyncHandler(async (req, res) => {
   const { category, city, approved = 'true', nearLat, nearLng } = req.query;
   const filter = {};
@@ -342,8 +347,26 @@ const deleteMyService = asyncHandler(async (req, res) => {
 });
 
 const listAssignedRequests = asyncHandler(async (req, res) => {
-  const requests = await ServiceRequest.find({ provider: req.user._id }).populate('serviceTaker', 'name email phone');
-  res.json({ requests });
+  const providerIds = await getCurrentProviderIds(req.user._id);
+  const requests = await ServiceRequest.find({ provider: { $in: providerIds } }).populate('serviceTaker', 'name email phone');
+
+  const enriched = requests.map((r) => {
+    const obj = r.toObject();
+    obj.takerDetails = Object.assign({}, obj.serviceTaker || {}, {
+      address: obj.address || '',
+      city: obj.city || '',
+      preferredDate: obj.preferredDate || null,
+      preferredTimeSlot: obj.preferredTimeSlot || '',
+      budgetLabel: obj.budgetLabel || '',
+      title: obj.title || '',
+      description: obj.description || '',
+      imageUrl: obj.imageUrl || '',
+      issueImages: obj.issueImages || [],
+    });
+    return obj;
+  });
+
+  res.json({ requests: enriched });
 });
 
 const listOpenRequests = asyncHandler(async (req, res) => {
@@ -358,7 +381,23 @@ const listOpenRequests = asyncHandler(async (req, res) => {
     .populate('serviceTaker', 'name email phone')
     .sort('-createdAt');
 
-  res.json({ requests });
+  const enriched = requests.map((r) => {
+    const obj = r.toObject();
+    obj.takerDetails = Object.assign({}, obj.serviceTaker || {}, {
+      address: obj.address || '',
+      city: obj.city || '',
+      preferredDate: obj.preferredDate || null,
+      preferredTimeSlot: obj.preferredTimeSlot || '',
+      budgetLabel: obj.budgetLabel || '',
+      title: obj.title || '',
+      description: obj.description || '',
+      imageUrl: obj.imageUrl || '',
+      issueImages: obj.issueImages || [],
+    });
+    return obj;
+  });
+
+  res.json({ requests: enriched });
 });
 
 const claimRequest = asyncHandler(async (req, res) => {
@@ -393,11 +432,27 @@ const claimRequest = asyncHandler(async (req, res) => {
     link: '/taker/requests',
   });
 
-  res.json({ request });
+  const obj = request ? request.toObject() : null;
+  if (obj) {
+    obj.takerDetails = Object.assign({}, obj.serviceTaker || {}, {
+      address: obj.address || '',
+      city: obj.city || '',
+      preferredDate: obj.preferredDate || null,
+      preferredTimeSlot: obj.preferredTimeSlot || '',
+      budgetLabel: obj.budgetLabel || '',
+      title: obj.title || '',
+      description: obj.description || '',
+      imageUrl: obj.imageUrl || '',
+      issueImages: obj.issueImages || [],
+    });
+  }
+
+  res.json({ request: obj });
 });
 
 const updateAssignedRequestStatus = asyncHandler(async (req, res) => {
   const { status, note = '' } = req.body;
+  const providerIds = await getCurrentProviderIds(req.user._id);
 
   if (!['assigned', 'in_progress', 'completed', 'cancelled'].includes(status)) {
     res.status(400);
@@ -405,7 +460,7 @@ const updateAssignedRequestStatus = asyncHandler(async (req, res) => {
   }
 
   const request = await ServiceRequest.findOneAndUpdate(
-    { _id: req.params.id, provider: req.user._id },
+    { _id: req.params.id, provider: { $in: providerIds } },
     {
       status,
       $push: {
@@ -441,11 +496,27 @@ const updateAssignedRequestStatus = asyncHandler(async (req, res) => {
     link: '/taker/requests',
   });
 
-  res.json({ request });
+  const obj = request ? request.toObject() : null;
+  if (obj) {
+    obj.takerDetails = Object.assign({}, obj.serviceTaker || {}, {
+      address: obj.address || '',
+      city: obj.city || '',
+      preferredDate: obj.preferredDate || null,
+      preferredTimeSlot: obj.preferredTimeSlot || '',
+      budgetLabel: obj.budgetLabel || '',
+      title: obj.title || '',
+      description: obj.description || '',
+      imageUrl: obj.imageUrl || '',
+      issueImages: obj.issueImages || [],
+    });
+  }
+
+  res.json({ request: obj });
 });
 
 const updateLeadPipeline = asyncHandler(async (req, res) => {
   const { pipelineStage, priority, nextFollowUpAt, note } = req.body;
+  const providerIds = await getCurrentProviderIds(req.user._id);
   const updates = {};
 
   if (pipelineStage) {
@@ -475,7 +546,7 @@ const updateLeadPipeline = asyncHandler(async (req, res) => {
   }
 
   const request = await ServiceRequest.findOneAndUpdate(
-    { _id: req.params.id, provider: req.user._id },
+    { _id: req.params.id, provider: { $in: providerIds } },
     updates,
     { new: true, runValidators: true }
   ).populate('serviceTaker', 'name email phone');
@@ -485,11 +556,27 @@ const updateLeadPipeline = asyncHandler(async (req, res) => {
     throw new Error('Lead not found');
   }
 
-  res.json({ request });
+  const obj = request ? request.toObject() : null;
+  if (obj) {
+    obj.takerDetails = Object.assign({}, obj.serviceTaker || {}, {
+      address: obj.address || '',
+      city: obj.city || '',
+      preferredDate: obj.preferredDate || null,
+      preferredTimeSlot: obj.preferredTimeSlot || '',
+      budgetLabel: obj.budgetLabel || '',
+      title: obj.title || '',
+      description: obj.description || '',
+      imageUrl: obj.imageUrl || '',
+      issueImages: obj.issueImages || [],
+    });
+  }
+
+  res.json({ request: obj });
 });
 
 const sendQuote = asyncHandler(async (req, res) => {
   const { amount, priceLabel, scope, validUntil } = req.body;
+  const providerIds = await getCurrentProviderIds(req.user._id);
 
   if (!amount && !priceLabel) {
     res.status(400);
@@ -497,7 +584,7 @@ const sendQuote = asyncHandler(async (req, res) => {
   }
 
   const request = await ServiceRequest.findOneAndUpdate(
-    { _id: req.params.id, provider: req.user._id },
+    { _id: req.params.id, provider: { $in: providerIds } },
     {
       pipelineStage: 'quoted',
       quote: {
@@ -532,7 +619,22 @@ const sendQuote = asyncHandler(async (req, res) => {
     link: '/taker/requests',
   });
 
-  res.json({ request });
+  const obj = request ? request.toObject() : null;
+  if (obj) {
+    obj.takerDetails = Object.assign({}, obj.serviceTaker || {}, {
+      address: obj.address || '',
+      city: obj.city || '',
+      preferredDate: obj.preferredDate || null,
+      preferredTimeSlot: obj.preferredTimeSlot || '',
+      budgetLabel: obj.budgetLabel || '',
+      title: obj.title || '',
+      description: obj.description || '',
+      imageUrl: obj.imageUrl || '',
+      issueImages: obj.issueImages || [],
+    });
+  }
+
+  res.json({ request: obj });
 });
 
 const getBusinessAnalytics = asyncHandler(async (req, res) => {
