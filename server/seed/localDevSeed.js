@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const env = require('../config/env');
 const User = require('../models/User');
 const ProviderProfile = require('../models/ProviderProfile');
-const CategoryConfig = require('../models/CategoryConfig');
+const ensureDefaultCategories = require('../utils/ensureDefaultCategories');
 
 const seedLocalDev = async () => {
   if (!env.mongoUri) {
@@ -14,7 +14,7 @@ const seedLocalDev = async () => {
   await upsertUser({
     name: 'Admin',
     phone: process.env.ADMIN_PHONE || '0000000000',
-    password: process.env.ADMIN_PASSWORD || 'admin12345',
+    password: process.env.ADMIN_PASSWORD || 'localAdmin12345!',
     role: 'admin',
   });
 
@@ -41,13 +41,7 @@ const seedLocalDev = async () => {
     { upsert: true, new: true }
   );
 
-  for (const name of ['Electrician', 'Plumber', 'Carpenter', 'Painter', 'AC Repair', 'Cleaning']) {
-    await CategoryConfig.findOneAndUpdate(
-      { name },
-      { name, description: `${name} services`, isActive: true },
-      { upsert: true }
-    );
-  }
+  await ensureDefaultCategories();
 
   console.log('Local dev data seeded.');
   await mongoose.disconnect();

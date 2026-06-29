@@ -21,6 +21,23 @@ Create first admin:
 npm run seed
 ```
 
+Set `ADMIN_PHONE` and `ADMIN_PASSWORD` first. In production the admin password
+must be at least 12 characters. Automatic admin seeding is disabled unless
+`SEED_ADMIN_ON_START=true`.
+
+## Production Environment
+
+Required:
+
+- `NODE_ENV=production`
+- `MONGO_URI`
+- `JWT_SECRET`
+- `CLIENT_URL` / `CLIENT_URLS`
+
+Optional:
+
+- SMTP settings for transactional email.
+
 ## Main Routes
 
 - `POST /api/auth/register`

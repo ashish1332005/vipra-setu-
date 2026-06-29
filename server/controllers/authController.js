@@ -159,11 +159,16 @@ const forgotPassword = asyncHandler(async (req, res) => {
   user.passwordResetExpires = new Date(Date.now() + 15 * 60 * 1000);
   await user.save();
 
-  res.json({
+  const response = {
     message: 'Password reset token generated. Use this code within 15 minutes.',
     expiresInMinutes: 15,
-    resetToken: token,
-  });
+  };
+
+  if (env.nodeEnv !== 'production') {
+    response.resetToken = token;
+  }
+
+  res.json(response);
 });
 
 const resetPassword = asyncHandler(async (req, res) => {

@@ -2,14 +2,22 @@
 
 # Node / web app generated files
 node_modules/
+.pub-cache/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
 dist/
 .env
 .env.local
+.mongo-data/
+.mongo-log/
 .idea/
 client/node_modules/
 client/dist/
 server/node_modules/
 server/.env
+server/uploads/
 
 # Built application files
 *.apk

@@ -8,6 +8,12 @@ const categoryConfigSchema = new mongoose.Schema(
       unique: true,
       trim: true,
     },
+    defaultKey: {
+      type: String,
+      trim: true,
+      unique: true,
+      sparse: true,
+    },
     description: {
       type: String,
       trim: true,

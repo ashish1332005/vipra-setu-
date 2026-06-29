@@ -10,6 +10,7 @@ const ContactLog = require('../models/ContactLog');
 const asyncHandler = require('../utils/asyncHandler');
 const createNotification = require('../utils/createNotification');
 const saveImageUpload = require('../utils/saveImageUpload');
+const ensureDefaultCategories = require('../utils/ensureDefaultCategories');
 
 const getDashboard = asyncHandler(async (req, res) => {
   const [totalUsers, totalProviders, totalTakers, pendingProviders, activeServices, openRequests, pendingServices, openReports, contactLogs] = await Promise.all([
@@ -584,6 +585,7 @@ const updateReport = asyncHandler(async (req, res) => {
 });
 
 const listCategories = asyncHandler(async (req, res) => {
+  await ensureDefaultCategories();
   const categories = await CategoryConfig.find().sort('name');
   res.json({ categories });
 });
@@ -606,6 +608,8 @@ const upsertCategory = asyncHandler(async (req, res) => {
     throw new Error('Category name is required');
   }
 
+  await ensureDefaultCategories();
+
   if (imageFile?.dataUrl) imageUrl = saveCategoryImage(imageFile);
   if (iconFile?.dataUrl) iconUrl = saveCategoryImage(iconFile);
 
@@ -624,10 +628,14 @@ const upsertCategory = asyncHandler(async (req, res) => {
     { upsert: true, new: true, runValidators: true }
   );
 
-  res.json({ category });
+  await ensureDefaultCategories();
+  const categories = await CategoryConfig.find().sort('name');
+  res.json({ category, categories });
 });
 
 const updateCategory = asyncHandler(async (req, res) => {
+  await ensureDefaultCategories();
+
   const {
     name,
     description,
@@ -643,7 +651,6 @@ const updateCategory = asyncHandler(async (req, res) => {
   if (categoryName) updates.name = categoryName;
   if (description !== undefined) updates.description = description;
   if (serviceTypes !== undefined) updates.serviceTypes = normalizeSkills(serviceTypes);
-  if (isActive !== undefined) updates.isActive = isActive;
   if (imageFile?.dataUrl) imageUrl = saveCategoryImage(imageFile);
   if (iconFile?.dataUrl) iconUrl = saveCategoryImage(iconFile);
   if (imageUrl !== undefined) updates.imageUrl = imageUrl;
@@ -660,6 +667,22 @@ const updateCategory = asyncHandler(async (req, res) => {
     }
   }
 
+  const existingCategory = await CategoryConfig.findById(req.params.id);
+  if (!existingCategory) {
+    res.status(404);
+    throw new Error('Category not found');
+  }
+
+  if (existingCategory.defaultKey) {
+    if (isActive === false) {
+      res.status(400);
+      throw new Error('Default categories cannot be disabled');
+    }
+    updates.isActive = true;
+  } else if (isActive !== undefined) {
+    updates.isActive = isActive;
+  }
+
   const category = await CategoryConfig.findByIdAndUpdate(
     req.params.id,
     updates,
@@ -671,10 +694,25 @@ const updateCategory = asyncHandler(async (req, res) => {
     throw new Error('Category not found');
   }
 
-  res.json({ category });
+  await ensureDefaultCategories();
+  const categories = await CategoryConfig.find().sort('name');
+  res.json({ category, categories });
 });
 
 const deleteCategory = asyncHandler(async (req, res) => {
+  await ensureDefaultCategories();
+
+  const existingCategory = await CategoryConfig.findById(req.params.id);
+  if (!existingCategory) {
+    res.status(404);
+    throw new Error('Category not found');
+  }
+
+  if (existingCategory.defaultKey) {
+    res.status(400);
+    throw new Error('Default categories are permanent and cannot be disabled');
+  }
+
   const category = await CategoryConfig.findByIdAndUpdate(
     req.params.id,
     { isActive: false },
@@ -686,7 +724,8 @@ const deleteCategory = asyncHandler(async (req, res) => {
     throw new Error('Category not found');
   }
 
-  res.json({ message: 'Category disabled', category });
+  const categories = await CategoryConfig.find().sort('name');
+  res.json({ message: 'Category disabled', category, categories });
 });
 
 const listAds = asyncHandler(async (req, res) => {
