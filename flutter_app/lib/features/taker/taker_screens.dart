@@ -277,7 +277,7 @@ class _TakerServicesPageState extends State<TakerServicesPage> {
   void initState() {
     super.initState();
     _categories = _loadCategories();
-    _ads = _loadAds();
+    _ads = _loadAds(_selectedGroup);
   }
 
   Future<List<CategoryItem>> _loadCategories() async {
@@ -299,11 +299,12 @@ class _TakerServicesPageState extends State<TakerServicesPage> {
     return merged.values.toList();
   }
 
-  Future<List<Map<String, dynamic>>> _loadAds() async {
+  Future<List<Map<String, dynamic>>> _loadAds(String category) async {
     try {
       final data = await widget.api.get('/ads', query: {
         'role': 'service_taker',
         'placement': 'services',
+        'category': category,
       });
       return (data['ads'] as List? ?? [])
           .whereType<Map<String, dynamic>>()
@@ -402,7 +403,10 @@ class _TakerServicesPageState extends State<TakerServicesPage> {
                       ? const Icon(Icons.check, color: AppTheme.saffron)
                       : null,
                   onTap: () {
-                    setState(() => _selectedGroup = group.name);
+                    setState(() {
+                      _selectedGroup = group.name;
+                      _ads = _loadAds(_selectedGroup);
+                    });
                     Navigator.pop(context);
                   },
                 ),
@@ -451,7 +455,7 @@ class _TakerServicesPageState extends State<TakerServicesPage> {
           child: RefreshIndicator(
             onRefresh: () async => setState(() {
               _categories = _loadCategories();
-              _ads = _loadAds();
+              _ads = _loadAds(_selectedGroup);
             }),
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 18, 16, 112),

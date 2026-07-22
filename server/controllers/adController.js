@@ -5,9 +5,21 @@ const listActiveAds = asyncHandler(async (req, res) => {
   const role = (req.query.role || 'all').trim();
   const category = (req.query.category || '').trim();
   const placement = (req.query.placement || '').trim().toLowerCase();
-  const categoryFilter = category && category !== 'all'
-    ? { targetCategory: { $in: ['all', category] } }
-    : {};
+  const escapeRegex = (value) => String(value).replace(/[.*+?^$()|[\\]\\]/g, '\\$&');
+  const categoryFilter = category && category.toLowerCase() !== 'all'
+    ? {
+        $or: [
+          { targetCategory: { $exists: false } },
+          { targetCategory: 'all' },
+          { targetCategory: { $regex: `^${escapeRegex(category)}$`, $options: 'i' } },
+        ],
+      }
+    : {
+        $or: [
+          { targetCategory: { $exists: false } },
+          { targetCategory: 'all' },
+        ],
+      };
   const placementFilter = placement && placement !== 'all'
     ? {
         $or: [

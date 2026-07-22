@@ -179,6 +179,7 @@ class AdItem {
       required this.status,
       this.imageUrl = '',
       this.placement = 'home',
+      this.placements = const [],
       this.audienceRole = 'all',
       this.targetCategory = 'all'});
 
@@ -188,6 +189,7 @@ class AdItem {
   final String status;
   final String imageUrl;
   final String placement;
+  final List<String> placements;
   final String audienceRole;
   final String targetCategory;
 
@@ -203,7 +205,8 @@ class AdItem {
       placement: (json['placement'] ??
               (placements.isNotEmpty ? placements.first : 'home'))
           .toString(),
-      audienceRole: (json['audienceRole'] ?? 'all').toString(),
+      placements: placements.map((item) => item.toString()).toList(),
+
       targetCategory: (json['targetCategory'] ?? 'all').toString(),
     );
   }
