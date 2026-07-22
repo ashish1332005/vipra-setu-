@@ -89,7 +89,6 @@ class _BookServicePageState extends State<BookServicePage> {
   final _issue = TextEditingController();
   final _address = TextEditingController(text: 'Bhilwara');
   final _instructions = TextEditingController();
-  final _budget = TextEditingController();
   DateTime? _date;
   TimeOfDay? _time;
   PickedImageUpload? _image;
@@ -205,7 +204,6 @@ class _BookServicePageState extends State<BookServicePage> {
             'Instructions: ${_instructions.text.trim()}',
         ].join('\n'),
         if (_image != null) 'imageFile': _image!.toJson(),
-        'budgetLabel': _budget.text.trim(),
         if (_selectedProvider.isNotEmpty) 'provider': _selectedProvider,
       });
       if (mounted) {
@@ -397,11 +395,6 @@ class _BookServicePageState extends State<BookServicePage> {
               helperText: 'Optional photo for provider/admin reference.',
               onChanged: (image) => setState(() => _image = image),
             ),
-            const SizedBox(height: 10),
-            TextField(
-                controller: _budget,
-                decoration:
-                    const InputDecoration(labelText: 'Estimated budget')),
             const SizedBox(height: 10),
             TextField(
                 controller: _instructions,

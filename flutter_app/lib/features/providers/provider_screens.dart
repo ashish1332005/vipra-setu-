@@ -6,6 +6,7 @@ import '../../core/api_client.dart';
 import '../../core/models.dart';
 import '../../shared/app_widgets.dart';
 import '../../shared/image_upload.dart';
+import '../taker/taker_catalog.dart';
 
 class ProviderSearch extends StatefulWidget {
   const ProviderSearch({
@@ -908,24 +909,34 @@ class _CreateServiceSheetState extends State<CreateServiceSheet> {
   }
 
   Future<List<CategoryItem>> _loadCategories() async {
+    final merged = <String, CategoryItem>{
+      for (final category in fallbackCategories)
+        category.name.trim().toLowerCase(): category,
+      for (final group in serviceCatalogGroups)
+        group.name.trim().toLowerCase(): CategoryItem(
+          name: group.name,
+          description: group.subtitle,
+          serviceTypes: group.services.map((service) => service.name).toList(),
+        ),
+    };
     try {
       final data = await widget.api.get('/categories');
-      final categories = (data['categories'] as List? ?? [])
+      for (final category in (data['categories'] as List? ?? [])
           .whereType<Map<String, dynamic>>()
           .map(CategoryItem.fromJson)
-          .where((category) => category.name.trim().isNotEmpty)
-          .toList()
-        ..sort((a, b) => a.name.compareTo(b.name));
-      if (_category.text.trim().isNotEmpty &&
-          !categories.any((item) => item.name == _category.text.trim())) {
-        categories.insert(0, CategoryItem(name: _category.text.trim()));
+          .where((category) => category.name.trim().isNotEmpty)) {
+        merged[category.name.trim().toLowerCase()] = category;
       }
-      return categories;
     } catch (_) {
-      return [];
+      // Built-in categories keep the form usable when the API is unavailable.
     }
+    final current = _category.text.trim();
+    if (current.isNotEmpty && !merged.containsKey(current.toLowerCase())) {
+      merged[current.toLowerCase()] = CategoryItem(name: current);
+    }
+    return merged.values.toList()
+      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
   }
-
   CategoryItem? _selectedCategory(List<CategoryItem> categories) {
     for (final category in categories) {
       if (category.name == _category.text) return category;
@@ -934,6 +945,12 @@ class _CreateServiceSheetState extends State<CreateServiceSheet> {
   }
 
   Future<void> _save() async {
+    if (_category.text.trim().isEmpty || _title.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Category aur service title select karein.')),
+      );
+      return;
+    }
     setState(() => _busy = true);
     try {
       final payload = {
@@ -957,6 +974,12 @@ class _CreateServiceSheetState extends State<CreateServiceSheet> {
       }
       widget.onSaved();
       if (mounted) Navigator.pop(context);
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Service save nahi hui: $error')),
+        );
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -1143,26 +1166,32 @@ class _ProviderProfileEditSheetState extends State<ProviderProfileEditSheet> {
   }
 
   Future<List<String>> _loadCategories() async {
+    final names = <String>{
+      for (final category in fallbackCategories) category.name.trim(),
+      for (final group in serviceCatalogGroups) group.name.trim(),
+    };
     try {
       final data = await widget.api.get('/categories');
-      final names = (data['categories'] as List? ?? [])
-          .whereType<Map<String, dynamic>>()
-          .map((category) => (category['name'] ?? '').toString().trim())
-          .where((name) => name.isNotEmpty)
-          .toSet()
-          .toList()
-        ..sort();
-      if (_category.text.trim().isNotEmpty &&
-          !names.contains(_category.text.trim())) {
-        names.insert(0, _category.text.trim());
+      for (final category in (data['categories'] as List? ?? [])
+          .whereType<Map<String, dynamic>>()) {
+        final name = (category['name'] ?? '').toString().trim();
+        if (name.isNotEmpty) names.add(name);
       }
-      return names;
     } catch (_) {
-      return [];
+      // Keep built-in categories available when the API is unavailable.
     }
+    final current = _category.text.trim();
+    if (current.isNotEmpty) names.add(current);
+    final result = names.toList()..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    return result;
   }
-
   Future<void> _save() async {
+    if (_name.text.trim().isEmpty || _category.text.trim().isEmpty || _city.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Name, category aur city required hain.')),
+      );
+      return;
+    }
     setState(() => _busy = true);
     try {
       await widget.api.put('/providers/me', {
@@ -1181,6 +1210,12 @@ class _ProviderProfileEditSheetState extends State<ProviderProfileEditSheet> {
       });
       widget.onSaved();
       if (mounted) Navigator.pop(context);
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Profile save nahi hui: $error')),
+        );
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
