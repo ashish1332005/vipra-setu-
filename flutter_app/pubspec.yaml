@@ -1,0 +1,32 @@
+name: vipra_setu_mobile
+description: Vipra Setu community service app for service takers, providers, and admins.
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  http: ^1.2.2
+  shared_preferences: ^2.3.2
+  url_launcher: ^6.3.0
+  google_maps_flutter: ^2.9.0
+  image_picker: ^1.1.2
+  flutter_secure_storage: ^10.3.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/
+    - assets/services/
+    - assets/premium/
+    - assets/generated/categories/
+    - assets/generated/branding/saffron-dhwaj.webp

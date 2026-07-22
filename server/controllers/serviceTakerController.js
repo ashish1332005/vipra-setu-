@@ -11,7 +11,8 @@ const saveImageUpload = require('../utils/saveImageUpload');
 
 const createRequest = asyncHandler(async (req, res) => {
   const { provider, category, title, description, city, address, preferredDate, preferredTimeSlot, budgetLabel, sourceService, imageFile } = req.body;
-  let { imageUrl = '' } = req.body;
+  let imageUrl = '';
+  let providerUser = null;
 
   if (!category || !title || !description || !city) {
     res.status(400);
@@ -20,9 +21,21 @@ const createRequest = asyncHandler(async (req, res) => {
 
   if (imageFile?.dataUrl) imageUrl = saveRequestImage(imageFile);
 
+  if (provider) {
+    const providerProfile = await ProviderProfile.findOne({
+      $or: [{ user: provider }, { _id: provider }],
+      isApproved: true,
+    }).populate('user', 'role status');
+    if (!providerProfile?.user || providerProfile.user.role !== 'service_provider' || providerProfile.user.status !== 'active') {
+      res.status(400);
+      throw new Error('Selected provider is not available');
+    }
+    providerUser = providerProfile.user._id;
+  }
+
   const request = await ServiceRequest.create({
     serviceTaker: req.user._id,
-    provider,
+    provider: providerUser,
     category,
     title,
     description,
@@ -34,12 +47,12 @@ const createRequest = asyncHandler(async (req, res) => {
     imageUrl,
     issueImages: imageUrl ? [imageUrl] : [],
     sourceService,
-    status: provider ? 'assigned' : 'open',
+    status: providerUser ? 'assigned' : 'open',
   });
 
-  if (provider) {
+  if (providerUser) {
     await createNotification({
-      user: provider,
+      user: providerUser,
       title: 'New direct request',
       message: `${req.user.name} sent you a ${category} request.`,
       type: 'request',
@@ -61,7 +74,7 @@ const listMyRequests = asyncHandler(async (req, res) => {
 
 const updateMyRequest = asyncHandler(async (req, res) => {
   const updates = {};
-  ['provider', 'category', 'title', 'description', 'city', 'address', 'preferredDate', 'preferredTimeSlot', 'budgetLabel', 'status', 'imageUrl'].forEach((field) => {
+  ['category', 'title', 'description', 'city', 'address', 'preferredDate', 'preferredTimeSlot', 'budgetLabel'].forEach((field) => {
     if (req.body[field] !== undefined) updates[field] = req.body[field];
   });
 
@@ -70,12 +83,17 @@ const updateMyRequest = asyncHandler(async (req, res) => {
     updates.$addToSet = { issueImages: updates.imageUrl };
   }
 
-  if (req.body.status) {
+  if (req.body.status !== undefined) {
+    if (req.body.status !== 'cancelled') {
+      res.status(400);
+      throw new Error('Customers may only cancel a request');
+    }
+    updates.status = 'cancelled';
     updates.$push = {
       statusHistory: {
-        status: req.body.status,
+        status: 'cancelled',
         changedBy: req.user._id,
-        note: 'Updated by service taker',
+        note: 'Cancelled by service taker',
       },
     };
   }
@@ -256,6 +274,18 @@ const createReport = asyncHandler(async (req, res) => {
     throw new Error('Reason is required');
   }
 
+  if (request) {
+    const ownedRequest = await ServiceRequest.findOne({ _id: request, serviceTaker: req.user._id });
+    if (!ownedRequest) {
+      res.status(403);
+      throw new Error('You can only report your own request');
+    }
+    if (provider && ownedRequest.provider && ownedRequest.provider.toString() !== String(provider)) {
+      res.status(400);
+      throw new Error('Report provider does not match the request');
+    }
+  }
+
   const report = await Report.create({
     reporter: req.user._id,
     provider,
@@ -302,6 +332,22 @@ const createContactLog = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error('Provider, category, and contact method are required');
   }
+
+  if (!profileId) {
+    const profile = await ProviderProfile.findOne({ user: providerUser }).select('_id');
+    profileId = profile?._id;
+  }
+
+  const verifiedProfile = await ProviderProfile.findOne({
+    _id: profileId,
+    user: providerUser,
+    isApproved: true,
+  }).populate('user', 'role status');
+  if (!verifiedProfile || verifiedProfile.user?.role !== 'service_provider' || verifiedProfile.user?.status !== 'active') {
+    res.status(400);
+    throw new Error('Selected provider is not available');
+  }
+  profileId = verifiedProfile._id;
 
   if (!profileId) {
     const profile = await ProviderProfile.findOne({ user: providerUser });

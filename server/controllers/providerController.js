@@ -1,4 +1,5 @@
 const ProviderProfile = require('../models/ProviderProfile');
+const User = require('../models/User');
 const Service = require('../models/Service');
 const ServiceRequest = require('../models/ServiceRequest');
 const Review = require('../models/Review');
@@ -6,8 +7,6 @@ const ContactLog = require('../models/ContactLog');
 const asyncHandler = require('../utils/asyncHandler');
 const createNotification = require('../utils/createNotification');
 const saveImageUpload = require('../utils/saveImageUpload');
-const fs = require('fs');
-const path = require('path');
 
 const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -49,6 +48,11 @@ const buildCategoryRegexes = (category) => {
 const getProviderUserId = (provider) => {
   const user = provider?.user;
   return (user?._id || user || '').toString();
+};
+
+const getCurrentProviderIds = async (userId) => {
+  const profile = await ProviderProfile.findOne({ user: userId }).select('_id');
+  return [userId, profile?._id].filter(Boolean);
 };
 
 const listProviders = asyncHandler(async (req, res) => {
@@ -160,6 +164,14 @@ const updateMyProviderProfile = asyncHandler(async (req, res) => {
     updates.coverImageUrl = saveProviderImage(req.body.coverImageFile);
   }
 
+  if (req.body.name !== undefined) {
+    await User.findByIdAndUpdate(
+      req.user._id,
+      { name: String(req.body.name).trim() || req.user.name },
+      { runValidators: true }
+    );
+  }
+
   const profile = await ProviderProfile.findOneAndUpdate(
     { user: req.user._id },
     {
@@ -169,7 +181,8 @@ const updateMyProviderProfile = asyncHandler(async (req, res) => {
     { new: true, runValidators: true, upsert: true, setDefaultsOnInsert: true }
   );
 
-  res.json({ profile });
+  const populatedProfile = await profile.populate('user', 'name email phone status');
+  res.json({ profile: populatedProfile });
 });
 
 const submitMyKyc = asyncHandler(async (req, res) => {
@@ -180,7 +193,11 @@ const submitMyKyc = asyncHandler(async (req, res) => {
     throw new Error('Document type and number are required');
   }
 
-  const uploadedDocumentUrl = documentFile ? saveKycDocument(req.user._id, documentFile) : documentUrl;
+  if (!documentFile?.dataUrl) {
+    res.status(400);
+    throw new Error('A KYC document upload is required');
+  }
+  const uploadedDocumentUrl = saveKycDocument(documentFile);
 
   const profile = await ProviderProfile.findOneAndUpdate(
     { user: req.user._id },
@@ -199,47 +216,17 @@ const submitMyKyc = asyncHandler(async (req, res) => {
   res.json({ profile });
 });
 
-const saveKycDocument = (userId, documentFile) => {
-  const { name = 'kyc-document', dataUrl } = documentFile;
-  const match = typeof dataUrl === 'string' && dataUrl.match(/^data:([\w/+.-]+);base64,(.+)$/);
-
-  if (!match) {
-    const error = new Error('Invalid KYC document upload');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  const mimeType = match[1];
-  const allowedTypes = {
+const saveKycDocument = (documentFile) => saveImageUpload(documentFile, {
+  folder: 'kyc',
+  label: 'KYC document',
+  maxSizeMb: 5,
+  allowedTypes: {
     'image/jpeg': '.jpg',
     'image/png': '.png',
     'image/webp': '.webp',
     'application/pdf': '.pdf',
-  };
-  const extension = allowedTypes[mimeType];
-
-  if (!extension) {
-    const error = new Error('Only JPG, PNG, WEBP, or PDF KYC documents are allowed');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  const buffer = Buffer.from(match[2], 'base64');
-  if (buffer.length > 5 * 1024 * 1024) {
-    const error = new Error('KYC document must be 5MB or smaller');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  const uploadDir = path.join(__dirname, '..', 'uploads', 'kyc');
-  fs.mkdirSync(uploadDir, { recursive: true });
-  const safeName = path.basename(name).replace(/[^a-z0-9.-]/gi, '-').toLowerCase();
-  const filename = `${userId}-${Date.now()}-${safeName || `document${extension}`}`;
-  const finalName = path.extname(filename) ? filename : `${filename}${extension}`;
-
-  fs.writeFileSync(path.join(uploadDir, finalName), buffer);
-  return `/uploads/kyc/${finalName}`;
-};
+  },
+});
 
 const saveProviderImage = (imageFile) => {
   return saveImageUpload(imageFile, {
@@ -261,7 +248,13 @@ const calculateDistanceKm = (lat1, lng1, lat2, lng2) => {
 };
 
 const createService = asyncHandler(async (req, res) => {
-  const { title, category, description, priceLabel, durationLabel, packageType, includes } = req.body;
+  const { title, category, description, priceLabel, durationLabel, packageType, includes, isActive } = req.body;
+  const profile = await ProviderProfile.findOne({ user: req.user._id }).select('isApproved');
+
+  if (!profile?.isApproved || req.user.status !== 'active') {
+    res.status(403);
+    throw new Error('Provider approval is required before publishing services');
+  }
 
   if (!title || !category || !description) {
     res.status(400);
@@ -277,6 +270,9 @@ const createService = asyncHandler(async (req, res) => {
     durationLabel,
     packageType,
     includes,
+    isActive: isActive !== false,
+    moderationStatus: 'pending',
+    isFeatured: false,
   });
 
   res.status(201).json({ service });
@@ -331,8 +327,26 @@ const deleteMyService = asyncHandler(async (req, res) => {
 });
 
 const listAssignedRequests = asyncHandler(async (req, res) => {
-  const requests = await ServiceRequest.find({ provider: req.user._id }).populate('serviceTaker', 'name email phone');
-  res.json({ requests });
+  const providerIds = await getCurrentProviderIds(req.user._id);
+  const requests = await ServiceRequest.find({ provider: { $in: providerIds } }).populate('serviceTaker', 'name email phone');
+
+  const enriched = requests.map((r) => {
+    const obj = r.toObject();
+    obj.takerDetails = Object.assign({}, obj.serviceTaker || {}, {
+      address: obj.address || '',
+      city: obj.city || '',
+      preferredDate: obj.preferredDate || null,
+      preferredTimeSlot: obj.preferredTimeSlot || '',
+      budgetLabel: obj.budgetLabel || '',
+      title: obj.title || '',
+      description: obj.description || '',
+      imageUrl: obj.imageUrl || '',
+      issueImages: obj.issueImages || [],
+    });
+    return obj;
+  });
+
+  res.json({ requests: enriched });
 });
 
 const listOpenRequests = asyncHandler(async (req, res) => {
@@ -347,11 +361,31 @@ const listOpenRequests = asyncHandler(async (req, res) => {
     .populate('serviceTaker', 'name email phone')
     .sort('-createdAt');
 
-  res.json({ requests });
+  const enriched = requests.map((r) => {
+    const obj = r.toObject();
+    obj.takerDetails = Object.assign({}, obj.serviceTaker || {}, {
+      address: obj.address || '',
+      city: obj.city || '',
+      preferredDate: obj.preferredDate || null,
+      preferredTimeSlot: obj.preferredTimeSlot || '',
+      budgetLabel: obj.budgetLabel || '',
+      title: obj.title || '',
+      description: obj.description || '',
+      imageUrl: obj.imageUrl || '',
+      issueImages: obj.issueImages || [],
+    });
+    return obj;
+  });
+
+  res.json({ requests: enriched });
 });
 
 const claimRequest = asyncHandler(async (req, res) => {
   const profile = await ProviderProfile.findOne({ user: req.user._id });
+  if (!profile?.isApproved || req.user.status !== 'active') {
+    res.status(403);
+    throw new Error('Provider approval is required before claiming requests');
+  }
 
   const request = await ServiceRequest.findOneAndUpdate(
     { _id: req.params.id, status: 'open' },
@@ -382,11 +416,27 @@ const claimRequest = asyncHandler(async (req, res) => {
     link: '/taker/requests',
   });
 
-  res.json({ request });
+  const obj = request ? request.toObject() : null;
+  if (obj) {
+    obj.takerDetails = Object.assign({}, obj.serviceTaker || {}, {
+      address: obj.address || '',
+      city: obj.city || '',
+      preferredDate: obj.preferredDate || null,
+      preferredTimeSlot: obj.preferredTimeSlot || '',
+      budgetLabel: obj.budgetLabel || '',
+      title: obj.title || '',
+      description: obj.description || '',
+      imageUrl: obj.imageUrl || '',
+      issueImages: obj.issueImages || [],
+    });
+  }
+
+  res.json({ request: obj });
 });
 
 const updateAssignedRequestStatus = asyncHandler(async (req, res) => {
-  const { status } = req.body;
+  const { status, note = '' } = req.body;
+  const providerIds = await getCurrentProviderIds(req.user._id);
 
   if (!['assigned', 'in_progress', 'completed', 'cancelled'].includes(status)) {
     res.status(400);
@@ -394,14 +444,14 @@ const updateAssignedRequestStatus = asyncHandler(async (req, res) => {
   }
 
   const request = await ServiceRequest.findOneAndUpdate(
-    { _id: req.params.id, provider: req.user._id },
+    { _id: req.params.id, provider: { $in: providerIds } },
     {
       status,
       $push: {
         statusHistory: {
           status,
           changedBy: req.user._id,
-          note: `Provider moved request to ${status}`,
+          note: note || `Provider moved request to ${status}`,
         },
       },
     },
@@ -423,16 +473,34 @@ const updateAssignedRequestStatus = asyncHandler(async (req, res) => {
   await createNotification({
     user: request.serviceTaker?._id || request.serviceTaker,
     title: 'Request updated',
-    message: `Your request is now ${status}.`,
+    message: note
+      ? `Your request is now ${status}: ${note}`
+      : `Your request is now ${status}.`,
     type: 'request',
     link: '/taker/requests',
   });
 
-  res.json({ request });
+  const obj = request ? request.toObject() : null;
+  if (obj) {
+    obj.takerDetails = Object.assign({}, obj.serviceTaker || {}, {
+      address: obj.address || '',
+      city: obj.city || '',
+      preferredDate: obj.preferredDate || null,
+      preferredTimeSlot: obj.preferredTimeSlot || '',
+      budgetLabel: obj.budgetLabel || '',
+      title: obj.title || '',
+      description: obj.description || '',
+      imageUrl: obj.imageUrl || '',
+      issueImages: obj.issueImages || [],
+    });
+  }
+
+  res.json({ request: obj });
 });
 
 const updateLeadPipeline = asyncHandler(async (req, res) => {
   const { pipelineStage, priority, nextFollowUpAt, note } = req.body;
+  const providerIds = await getCurrentProviderIds(req.user._id);
   const updates = {};
 
   if (pipelineStage) {
@@ -462,7 +530,7 @@ const updateLeadPipeline = asyncHandler(async (req, res) => {
   }
 
   const request = await ServiceRequest.findOneAndUpdate(
-    { _id: req.params.id, provider: req.user._id },
+    { _id: req.params.id, provider: { $in: providerIds } },
     updates,
     { new: true, runValidators: true }
   ).populate('serviceTaker', 'name email phone');
@@ -472,11 +540,27 @@ const updateLeadPipeline = asyncHandler(async (req, res) => {
     throw new Error('Lead not found');
   }
 
-  res.json({ request });
+  const obj = request ? request.toObject() : null;
+  if (obj) {
+    obj.takerDetails = Object.assign({}, obj.serviceTaker || {}, {
+      address: obj.address || '',
+      city: obj.city || '',
+      preferredDate: obj.preferredDate || null,
+      preferredTimeSlot: obj.preferredTimeSlot || '',
+      budgetLabel: obj.budgetLabel || '',
+      title: obj.title || '',
+      description: obj.description || '',
+      imageUrl: obj.imageUrl || '',
+      issueImages: obj.issueImages || [],
+    });
+  }
+
+  res.json({ request: obj });
 });
 
 const sendQuote = asyncHandler(async (req, res) => {
   const { amount, priceLabel, scope, validUntil } = req.body;
+  const providerIds = await getCurrentProviderIds(req.user._id);
 
   if (!amount && !priceLabel) {
     res.status(400);
@@ -484,7 +568,7 @@ const sendQuote = asyncHandler(async (req, res) => {
   }
 
   const request = await ServiceRequest.findOneAndUpdate(
-    { _id: req.params.id, provider: req.user._id },
+    { _id: req.params.id, provider: { $in: providerIds } },
     {
       pipelineStage: 'quoted',
       quote: {
@@ -519,7 +603,22 @@ const sendQuote = asyncHandler(async (req, res) => {
     link: '/taker/requests',
   });
 
-  res.json({ request });
+  const obj = request ? request.toObject() : null;
+  if (obj) {
+    obj.takerDetails = Object.assign({}, obj.serviceTaker || {}, {
+      address: obj.address || '',
+      city: obj.city || '',
+      preferredDate: obj.preferredDate || null,
+      preferredTimeSlot: obj.preferredTimeSlot || '',
+      budgetLabel: obj.budgetLabel || '',
+      title: obj.title || '',
+      description: obj.description || '',
+      imageUrl: obj.imageUrl || '',
+      issueImages: obj.issueImages || [],
+    });
+  }
+
+  res.json({ request: obj });
 });
 
 const getBusinessAnalytics = asyncHandler(async (req, res) => {

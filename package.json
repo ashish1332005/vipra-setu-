@@ -4,8 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-  "dev": "concurrently \"npm run dev --prefix client\" \"npm run dev --prefix server\""
-},
+    "dev": "concurrently \"npm run dev --prefix server\" \"cd flutter_app && flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:5000/api\"",
+    "server": "npm run dev --prefix server",
+    "flutter:analyze": "cd flutter_app && flutter analyze",
+    "flutter:test": "cd flutter_app && flutter test"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
