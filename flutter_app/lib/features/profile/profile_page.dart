@@ -238,15 +238,7 @@ class ProfilePage extends StatelessWidget {
               title: 'About Vipra Sewa Setu',
               subtitle: 'Community service platform',
               onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => const InfoContentPage(
-                      title: 'About Vipra Sewa Setu',
-                      icon: Icons.info_outline,
-                      paragraphs: [
-                        'Vipra Sewa Setu connects community members with verified local professionals, service requests, bookings and support.',
-                        'The app supports service takers, service providers and admins from one shared platform.',
-                        'Our focus is trust, local availability, transparent service discovery and community support.',
-                      ],
-                    ),
+                    builder: (_) => const AboutVipraSetuPage(),
                   ))),
           _ProfileOption(
               icon: Icons.settings_outlined,
@@ -347,6 +339,264 @@ class _SupportPageState extends State<SupportPage> {
       ),
     );
   }
+}
+
+class AboutVipraSetuPage extends StatelessWidget {
+  const AboutVipraSetuPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('About Us')),
+      body: AppBackground(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
+          children: [
+            Container(
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                    colors: [AppTheme.navy, Color(0xFF334A70)]),
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [
+                  BoxShadow(
+                      color: AppTheme.navy.withValues(alpha: .18),
+                      blurRadius: 24,
+                      offset: const Offset(0, 14))
+                ],
+              ),
+              child: Stack(
+                children: [
+                  Positioned(
+                      right: -58,
+                      top: -75,
+                      child: Image.asset(AppAssets.saffronDhwaj,
+                          width: 235,
+                          height: 300,
+                          fit: BoxFit.cover,
+                          opacity: const AlwaysStoppedAnimation(.28))),
+                  const Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CommunityMark(size: 70, light: true),
+                        SizedBox(height: 22),
+                        Text('Vipra Sewa Setu',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 28,
+                                fontWeight: FontWeight.w900)),
+                        SizedBox(height: 6),
+                        Text(
+                            'A unified platform for social service, employment and community growth.',
+                            style: TextStyle(
+                                color: Color(0xFFFFE5D4),
+                                fontSize: 15,
+                                height: 1.45,
+                                fontWeight: FontWeight.w600)),
+                        SizedBox(height: 18),
+                        _AboutBadge(),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 22),
+            const _AboutHeading('Our purpose',
+                'Technology that brings people, opportunities and dependable local support closer together.'),
+            const SizedBox(height: 14),
+            const Row(
+              children: [
+                Expanded(
+                    child: _AboutPillar(
+                        icon: Icons.diversity_3_outlined,
+                        title: 'Sangathan',
+                        subtitle: 'Connect the community')),
+                SizedBox(width: 10),
+                Expanded(
+                    child: _AboutPillar(
+                        icon: Icons.volunteer_activism_outlined,
+                        title: 'Seva',
+                        subtitle: 'Serve with dignity')),
+                SizedBox(width: 10),
+                Expanded(
+                    child: _AboutPillar(
+                        icon: Icons.handshake_outlined,
+                        title: 'Sahyog',
+                        subtitle: 'Grow together')),
+              ],
+            ),
+            const SizedBox(height: 22),
+            const _AboutHeading('One platform. Everyone connected.',
+                'Customers can discover services, providers can build livelihoods, and admins can keep every interaction safer and more transparent.'),
+            const SizedBox(height: 14),
+            const _AboutRole(
+                icon: Icons.search_rounded,
+                title: 'For community members',
+                text:
+                    'Find trusted professionals, request help and track services in one place.'),
+            const _AboutRole(
+                icon: Icons.engineering_outlined,
+                title: 'For service providers',
+                text:
+                    'Reach genuine local opportunities and grow through meaningful work.'),
+            const _AboutRole(
+                icon: Icons.verified_user_outlined,
+                title: 'Built around trust',
+                text:
+                    'Clear workflows, accountable support and community-first service discovery.'),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                  color: const Color(0xFFFFF0E4),
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(color: const Color(0xFFFFD4B8))),
+              child: const Row(
+                children: [
+                  CircleAvatar(
+                      backgroundColor: AppTheme.saffron,
+                      foregroundColor: Colors.white,
+                      child: Icon(Icons.format_quote_rounded)),
+                  SizedBox(width: 14),
+                  Expanded(
+                      child: Text(
+                          'Connected community. Trusted service. Shared progress.',
+                          style: TextStyle(
+                              color: AppTheme.navy,
+                              height: 1.35,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900))),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AboutBadge extends StatelessWidget {
+  const _AboutBadge();
+  @override
+  Widget build(BuildContext context) => Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: .14),
+          borderRadius: BorderRadius.circular(99),
+          border: Border.all(color: Colors.white.withValues(alpha: .2))),
+      child: const Text('SEVA  •  SAHYOG  •  SANSKAR',
+          style: TextStyle(
+              color: Colors.white,
+              fontSize: 11,
+              letterSpacing: .8,
+              fontWeight: FontWeight.w900)));
+}
+
+class _AboutHeading extends StatelessWidget {
+  const _AboutHeading(this.title, this.text);
+  final String title;
+  final String text;
+  @override
+  Widget build(BuildContext context) =>
+      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(title,
+            style: const TextStyle(
+                color: AppTheme.navy,
+                fontSize: 22,
+                fontWeight: FontWeight.w900)),
+        const SizedBox(height: 7),
+        Text(text,
+            style: const TextStyle(
+                color: AppTheme.softText,
+                height: 1.5,
+                fontWeight: FontWeight.w600))
+      ]);
+}
+
+class _AboutPillar extends StatelessWidget {
+  const _AboutPillar(
+      {required this.icon, required this.title, required this.subtitle});
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  @override
+  Widget build(BuildContext context) => Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+      decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppTheme.line),
+          boxShadow: [
+            BoxShadow(
+                color: AppTheme.navy.withValues(alpha: .06),
+                blurRadius: 14,
+                offset: const Offset(0, 7))
+          ]),
+      child: Column(children: [
+        CircleAvatar(
+            backgroundColor: const Color(0xFFFFE9D8),
+            foregroundColor: AppTheme.saffron,
+            child: Icon(icon)),
+        const SizedBox(height: 10),
+        Text(title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+                color: AppTheme.navy, fontWeight: FontWeight.w900)),
+        const SizedBox(height: 3),
+        Text(subtitle,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+                color: AppTheme.muted,
+                fontSize: 10,
+                height: 1.25,
+                fontWeight: FontWeight.w600))
+      ]));
+}
+
+class _AboutRole extends StatelessWidget {
+  const _AboutRole(
+      {required this.icon, required this.title, required this.text});
+  final IconData icon;
+  final String title;
+  final String text;
+  @override
+  Widget build(BuildContext context) => Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppTheme.line)),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Container(
+            width: 43,
+            height: 43,
+            decoration: BoxDecoration(
+                color: const Color(0xFFFFF0E6),
+                borderRadius: BorderRadius.circular(14)),
+            child: Icon(icon, color: AppTheme.saffron)),
+        const SizedBox(width: 13),
+        Expanded(
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(title,
+              style: const TextStyle(
+                  color: AppTheme.navy,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900)),
+          const SizedBox(height: 4),
+          Text(text,
+              style: const TextStyle(
+                  color: AppTheme.muted,
+                  height: 1.4,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600))
+        ]))
+      ]));
 }
 
 class InfoContentPage extends StatelessWidget {

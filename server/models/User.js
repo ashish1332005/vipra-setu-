@@ -23,7 +23,8 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
-      minlength: 6,
+      minlength: 10,
+      maxlength: 72,
       select: false,
     },
     role: {
@@ -55,13 +56,27 @@ const userSchema = new mongoose.Schema(
       type: Date,
       select: false,
     },
+    tokenVersion: {
+      type: Number,
+      default: 0,
+      select: false,
+    },
+    failedLoginAttempts: {
+      type: Number,
+      default: 0,
+      select: false,
+    },
+    lockUntil: {
+      type: Date,
+      select: false,
+    },
   },
   { timestamps: true }
 );
 
 userSchema.pre('save', async function hashPassword(next) {
   if (!this.isModified('password')) return next();
-  this.password = await bcrypt.hash(this.password, 10);
+  this.password = await bcrypt.hash(this.password, 12);
   next();
 });
 

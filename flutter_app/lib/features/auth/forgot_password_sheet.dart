@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../app/app_theme.dart';
@@ -107,7 +108,7 @@ class _ForgotPasswordSheetState extends State<ForgotPasswordSheet> {
             icon: const Icon(Icons.sms_outlined),
             label: Text(_busy ? 'Please wait...' : 'Request reset token'),
           ),
-          if (_devToken != null) ...[
+          if (_devToken != null && !kReleaseMode) ...[
             const SizedBox(height: 10),
             InfoStrip(
               icon: Icons.key_outlined,

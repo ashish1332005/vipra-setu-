@@ -11,10 +11,7 @@ const register = asyncHandler(async (req, res) => {
 
   const normalizedPhone = normalizePhone(phone);
 
-  if (!name || !normalizedPhone || !password) {
-    res.status(400);
-    throw new Error('Name, mobile number, and password are required');
-  }
+  validateIdentityInput({ name, phone: normalizedPhone, password });
 
   if (!['service_provider', 'service_taker'].includes(role)) {
     res.status(400);
@@ -28,7 +25,7 @@ const register = asyncHandler(async (req, res) => {
   }
 
   const user = await User.create({
-    name,
+    name: String(name).trim(),
     email: buildPhoneLoginEmail(normalizedPhone),
     phone: normalizedPhone,
     password,
@@ -60,29 +57,44 @@ const register = asyncHandler(async (req, res) => {
 
 const login = asyncHandler(async (req, res) => {
   const { phone, password } = req.body;
-
   const normalizedPhone = normalizePhone(phone);
 
-  if (!normalizedPhone || !password) {
-    res.status(400);
-    throw new Error('Mobile number and password are required');
+  if (!isValidPhone(normalizedPhone) || typeof password !== 'string') {
+    res.status(401);
+    throw new Error('Invalid mobile number or password');
   }
 
-  const user = await User.findOne({ phone: normalizedPhone }).select('+password');
-  if (!user || !(await user.matchPassword(password))) {
+  const user = await User.findOne({ phone: normalizedPhone })
+    .select('+password +failedLoginAttempts +lockUntil +tokenVersion');
+
+  if (user?.lockUntil && user.lockUntil > new Date()) {
+    res.status(429);
+    throw new Error('Too many failed attempts. Please try again later.');
+  }
+
+  const passwordMatches = user ? await user.matchPassword(password) : false;
+  if (!user || !passwordMatches) {
+    if (user) {
+      user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
+      if (user.failedLoginAttempts >= 5) {
+        user.lockUntil = new Date(Date.now() + 15 * 60 * 1000);
+      }
+      await user.save({ validateBeforeSave: false });
+    }
     res.status(401);
     throw new Error('Invalid mobile number or password');
   }
 
   if (user.status === 'banned') {
     res.status(403);
-    throw new Error('Your account is banned');
+    throw new Error('Access denied');
   }
 
-  res.json({
-    user: sanitizeUser(user),
-    token: generateToken(user),
-  });
+  user.failedLoginAttempts = 0;
+  user.lockUntil = undefined;
+  await user.save({ validateBeforeSave: false });
+
+  res.json({ user: sanitizeUser(user), token: generateToken(user) });
 });
 
 const getMe = asyncHandler(async (req, res) => {
@@ -93,9 +105,9 @@ const updateMe = asyncHandler(async (req, res) => {
   const { name, phone } = req.body;
   const normalizedPhone = normalizePhone(phone);
 
-  if (!name || !normalizedPhone) {
+  if (!isValidName(name) || !isValidPhone(normalizedPhone)) {
     res.status(400);
-    throw new Error('Name and mobile number are required');
+    throw new Error('Valid name and mobile number are required');
   }
 
   const existingUser = await User.findOne({
@@ -118,22 +130,23 @@ const updateMe = asyncHandler(async (req, res) => {
 
 const changePassword = asyncHandler(async (req, res) => {
   const { currentPassword, newPassword } = req.body;
+  validatePassword(newPassword);
 
-  if (!currentPassword || !newPassword || String(newPassword).length < 6) {
-    res.status(400);
-    throw new Error('Current password and a new password of at least 6 characters are required');
-  }
-
-  const user = await User.findById(req.user._id).select('+password');
-  if (!user || !(await user.matchPassword(currentPassword))) {
+  const user = await User.findById(req.user._id).select('+password +tokenVersion');
+  if (!user || !(await user.matchPassword(String(currentPassword || '')))) {
     res.status(401);
     throw new Error('Current password is incorrect');
   }
+  if (await user.matchPassword(newPassword)) {
+    res.status(400);
+    throw new Error('New password must be different from the current password');
+  }
 
   user.password = newPassword;
+  user.tokenVersion = (user.tokenVersion || 0) + 1;
   await user.save();
 
-  res.json({ message: 'Password changed successfully' });
+  res.json({ message: 'Password changed successfully', token: generateToken(user) });
 });
 
 const forgotPassword = asyncHandler(async (req, res) => {
@@ -175,10 +188,11 @@ const resetPassword = asyncHandler(async (req, res) => {
   const { phone, token, newPassword } = req.body;
   const normalizedPhone = normalizePhone(phone);
 
-  if (!normalizedPhone || !token || !newPassword || String(newPassword).length < 6) {
+  if (!isValidPhone(normalizedPhone) || !token) {
     res.status(400);
-    throw new Error('Mobile number, reset token, and a new password of at least 6 characters are required');
+    throw new Error('Invalid password reset request');
   }
+  validatePassword(newPassword);
 
   const user = await User.findOne({
     phone: normalizedPhone,
@@ -192,6 +206,7 @@ const resetPassword = asyncHandler(async (req, res) => {
   }
 
   user.password = newPassword;
+  user.tokenVersion = (user.tokenVersion || 0) + 1;
   user.passwordResetToken = undefined;
   user.passwordResetExpires = undefined;
   await user.save();
@@ -262,6 +277,27 @@ const sanitizeUser = (user) => ({
 });
 
 const normalizePhone = (phone = '') => String(phone).replace(/\D/g, '');
+const isValidPhone = (phone) => /^\d{10,15}$/.test(String(phone || ''));
+const isValidName = (name) => {
+  const value = String(name || '').trim();
+  return value.length >= 2 && value.length <= 80;
+};
+const validatePassword = (password) => {
+  const value = String(password || '');
+  if (value.length < 10 || value.length > 72 || !/[A-Za-z]/.test(value) || !/\d/.test(value)) {
+    const error = new Error('Password must be 10-72 characters and include a letter and a number');
+    error.statusCode = 400;
+    throw error;
+  }
+};
+const validateIdentityInput = ({ name, phone, password }) => {
+  if (!isValidName(name) || !isValidPhone(phone)) {
+    const error = new Error('Valid name and 10-15 digit mobile number are required');
+    error.statusCode = 400;
+    throw error;
+  }
+  validatePassword(password);
+};
 
 const buildPhoneLoginEmail = (phone) => `${phone}@mobile.local`;
 

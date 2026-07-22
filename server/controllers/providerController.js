@@ -7,8 +7,6 @@ const ContactLog = require('../models/ContactLog');
 const asyncHandler = require('../utils/asyncHandler');
 const createNotification = require('../utils/createNotification');
 const saveImageUpload = require('../utils/saveImageUpload');
-const fs = require('fs');
-const path = require('path');
 
 const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -195,7 +193,11 @@ const submitMyKyc = asyncHandler(async (req, res) => {
     throw new Error('Document type and number are required');
   }
 
-  const uploadedDocumentUrl = documentFile ? saveKycDocument(req.user._id, documentFile) : documentUrl;
+  if (!documentFile?.dataUrl) {
+    res.status(400);
+    throw new Error('A KYC document upload is required');
+  }
+  const uploadedDocumentUrl = saveKycDocument(documentFile);
 
   const profile = await ProviderProfile.findOneAndUpdate(
     { user: req.user._id },
@@ -214,47 +216,17 @@ const submitMyKyc = asyncHandler(async (req, res) => {
   res.json({ profile });
 });
 
-const saveKycDocument = (userId, documentFile) => {
-  const { name = 'kyc-document', dataUrl } = documentFile;
-  const match = typeof dataUrl === 'string' && dataUrl.match(/^data:([\w/+.-]+);base64,(.+)$/);
-
-  if (!match) {
-    const error = new Error('Invalid KYC document upload');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  const mimeType = match[1];
-  const allowedTypes = {
+const saveKycDocument = (documentFile) => saveImageUpload(documentFile, {
+  folder: 'kyc',
+  label: 'KYC document',
+  maxSizeMb: 5,
+  allowedTypes: {
     'image/jpeg': '.jpg',
     'image/png': '.png',
     'image/webp': '.webp',
     'application/pdf': '.pdf',
-  };
-  const extension = allowedTypes[mimeType];
-
-  if (!extension) {
-    const error = new Error('Only JPG, PNG, WEBP, or PDF KYC documents are allowed');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  const buffer = Buffer.from(match[2], 'base64');
-  if (buffer.length > 5 * 1024 * 1024) {
-    const error = new Error('KYC document must be 5MB or smaller');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  const uploadDir = path.join(__dirname, '..', 'uploads', 'kyc');
-  fs.mkdirSync(uploadDir, { recursive: true });
-  const safeName = path.basename(name).replace(/[^a-z0-9.-]/gi, '-').toLowerCase();
-  const filename = `${userId}-${Date.now()}-${safeName || `document${extension}`}`;
-  const finalName = path.extname(filename) ? filename : `${filename}${extension}`;
-
-  fs.writeFileSync(path.join(uploadDir, finalName), buffer);
-  return `/uploads/kyc/${finalName}`;
-};
+  },
+});
 
 const saveProviderImage = (imageFile) => {
   return saveImageUpload(imageFile, {
@@ -277,6 +249,12 @@ const calculateDistanceKm = (lat1, lng1, lat2, lng2) => {
 
 const createService = asyncHandler(async (req, res) => {
   const { title, category, description, priceLabel, durationLabel, packageType, includes, isActive } = req.body;
+  const profile = await ProviderProfile.findOne({ user: req.user._id }).select('isApproved');
+
+  if (!profile?.isApproved || req.user.status !== 'active') {
+    res.status(403);
+    throw new Error('Provider approval is required before publishing services');
+  }
 
   if (!title || !category || !description) {
     res.status(400);
@@ -292,7 +270,9 @@ const createService = asyncHandler(async (req, res) => {
     durationLabel,
     packageType,
     includes,
-    isActive,
+    isActive: isActive !== false,
+    moderationStatus: 'pending',
+    isFeatured: false,
   });
 
   res.status(201).json({ service });
@@ -402,6 +382,10 @@ const listOpenRequests = asyncHandler(async (req, res) => {
 
 const claimRequest = asyncHandler(async (req, res) => {
   const profile = await ProviderProfile.findOne({ user: req.user._id });
+  if (!profile?.isApproved || req.user.status !== 'active') {
+    res.status(403);
+    throw new Error('Provider approval is required before claiming requests');
+  }
 
   const request = await ServiceRequest.findOneAndUpdate(
     { _id: req.params.id, status: 'open' },

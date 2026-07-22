@@ -5,19 +5,28 @@ const asyncHandler = require('../utils/asyncHandler');
 
 const protect = asyncHandler(async (req, res, next) => {
   const authHeader = req.headers.authorization || '';
-  const token = authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
-
-  if (!token) {
+  const match = authHeader.match(/^Bearer\s+([^\s]+)$/i);
+  if (!match) {
     res.status(401);
-    throw new Error('Not authorized, token missing');
+    throw new Error('Authentication required');
   }
 
-  const decoded = jwt.verify(token, env.jwtSecret);
-  const user = await User.findById(decoded.id).select('-password');
-
-  if (!user || user.status === 'banned') {
+  let decoded;
+  try {
+    decoded = jwt.verify(match[1], env.jwtSecret, {
+      algorithms: ['HS256'],
+      issuer: env.jwtIssuer,
+      audience: env.jwtAudience,
+    });
+  } catch (_) {
     res.status(401);
-    throw new Error('Not authorized');
+    throw new Error('Invalid or expired session');
+  }
+
+  const user = await User.findById(decoded.sub).select('+tokenVersion');
+  if (!user || user.status === 'banned' || (user.tokenVersion || 0) !== (decoded.tokenVersion || 0)) {
+    res.status(401);
+    throw new Error('Invalid or expired session');
   }
 
   req.user = user;
@@ -29,7 +38,6 @@ const authorize = (...roles) => (req, res, next) => {
     res.status(403);
     throw new Error('Access denied');
   }
-
   next();
 };
 
@@ -38,7 +46,6 @@ const requireVerifiedEmail = (req, res, next) => {
     res.status(403);
     throw new Error('Please verify your email before using this feature');
   }
-
   next();
 };
 

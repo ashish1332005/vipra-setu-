@@ -53,3 +53,14 @@ Optional:
 - `GET /api/admin/users`
 - `PATCH /api/admin/users/:id/status`
 - `PATCH /api/admin/providers/:id/approve`
+
+## Local role smoke test
+
+For local verification only, seed deterministic admin, provider, and service-taker accounts:
+
+```bash
+npm run seed:local
+npm run smoke:roles
+```
+
+The smoke test verifies login, `/auth/me`, category loading, admin dashboard access, provider request access, service-taker request access, and rejection of an incorrect role. Override `ADMIN_PHONE`, `ADMIN_PASSWORD`, `DEV_PROVIDER_PHONE`, `DEV_PROVIDER_PASSWORD`, `DEV_TAKER_PHONE`, and `DEV_TAKER_PASSWORD` when needed. Do not use these local defaults in production.

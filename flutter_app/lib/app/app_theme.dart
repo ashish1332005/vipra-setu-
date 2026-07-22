@@ -173,20 +173,20 @@ class AppTheme {
       colorScheme: scheme,
       scaffoldBackgroundColor: const Color(0xFF101318),
       textTheme: baseText.copyWith(
-        headlineLarge: baseText.headlineLarge?.copyWith(
-            fontWeight: FontWeight.w700, letterSpacing: 0),
-        headlineMedium: baseText.headlineMedium?.copyWith(
-            fontWeight: FontWeight.w700, letterSpacing: 0),
-        titleLarge: baseText.titleLarge?.copyWith(
-            fontWeight: FontWeight.w700, letterSpacing: 0),
-        bodyLarge: baseText.bodyLarge?.copyWith(
-            fontWeight: FontWeight.w400, letterSpacing: 0),
+        headlineLarge: baseText.headlineLarge
+            ?.copyWith(fontWeight: FontWeight.w700, letterSpacing: 0),
+        headlineMedium: baseText.headlineMedium
+            ?.copyWith(fontWeight: FontWeight.w700, letterSpacing: 0),
+        titleLarge: baseText.titleLarge
+            ?.copyWith(fontWeight: FontWeight.w700, letterSpacing: 0),
+        bodyLarge: baseText.bodyLarge
+            ?.copyWith(fontWeight: FontWeight.w400, letterSpacing: 0),
         bodyMedium: baseText.bodyMedium?.copyWith(
             fontWeight: FontWeight.w400,
             letterSpacing: 0,
             color: const Color(0xFFC8CED8)),
-        labelLarge: baseText.labelLarge?.copyWith(
-            fontWeight: FontWeight.w700, letterSpacing: 0),
+        labelLarge: baseText.labelLarge
+            ?.copyWith(fontWeight: FontWeight.w700, letterSpacing: 0),
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Color(0xFF101318),

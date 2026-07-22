@@ -24,10 +24,12 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
       _message = null;
     });
     try {
-      await widget.api.patch('/auth/password', {
+      final data = await widget.api.patch('/auth/password', {
         'currentPassword': _current.text,
         'newPassword': _next.text,
       });
+      final token = data['token']?.toString();
+      if (token != null) await widget.api.saveToken(token);
       setState(() => _message = 'Password changed successfully');
     } catch (error) {
       setState(() => _message = error.toString());

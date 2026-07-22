@@ -12,9 +12,12 @@ const startServer = async () => {
     await ensureAdmin();
   }
 
-  app.listen(env.port, () => {
-    console.log(`Server running on port ${env.port}`);
+  const server = app.listen(env.port, () => {
+    console.log('Server running on port ' + env.port);
   });
+  server.requestTimeout = 30000;
+  server.headersTimeout = 10000;
+  server.keepAliveTimeout = 5000;
 };
 
 startServer();

@@ -148,15 +148,13 @@ class ServiceRequestItem {
       id: (json['_id'] ?? json['id'] ?? '').toString(),
       title: (json['title'] ?? takerDetails['title'] ?? 'Service Request')
           .toString(),
-      category: (json['category'] ?? takerDetails['category'] ?? '')
-          .toString(),
+      category: (json['category'] ?? takerDetails['category'] ?? '').toString(),
       city: (json['city'] ?? takerDetails['city'] ?? '').toString(),
       status: (json['status'] ?? 'open').toString(),
       description:
           (json['description'] ?? takerDetails['description'] ?? '').toString(),
       budgetLabel:
-          (json['budgetLabel'] ?? takerDetails['budgetLabel'] ?? '')
-              .toString(),
+          (json['budgetLabel'] ?? takerDetails['budgetLabel'] ?? '').toString(),
       imageUrl: (json['imageUrl'] ?? takerDetails['imageUrl'] ?? '').toString(),
       address: (json['address'] ?? takerDetails['address'] ?? '').toString(),
       preferredDate:

@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
-
 import '../../app/app_theme.dart';
 import '../../shared/app_widgets.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key, required this.onDone});
-
   final VoidCallback onDone;
-
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
@@ -15,16 +12,15 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final _controller = PageController();
   int _index = 0;
-
   final _pages = const [
     _OnboardingData(
       image: AppAssets.onboardingVipraSenaLogo,
-      background: AppAssets.vipraSena,
+      background: AppAssets.saffronDhwaj,
       accent: AppTheme.saffron,
       title: 'Vipra Sena',
-      headline: 'Ekta mein shakti, seva mein samarpan',
+      headline: 'Unity in strength,\nservice with purpose',
       subtitle:
-          'Vipra samaj ko jodne, sahyog badhane aur samaj hit mein kaam karne ka ek majboot manch.',
+          'Connect the Vipra community through trusted service, support and opportunity.',
       quote: 'Sangathit samaj, samruddh samaj',
       chips: [
         _ChipData(Icons.diversity_3_outlined, 'Sangathan'),
@@ -39,7 +35,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       title: 'BPF',
       headline: 'Ekta se vikas, seva se samman',
       subtitle:
-          'Samaj seva, sahyog aur sanskar ke liye hum sab milkar ek kadam aage badhein.',
+          'Connect the Vipra community through trusted service, support and opportunity.',
       quote: 'Samaj seva hi sachchi pooja hai',
       chips: [
         _ChipData(Icons.groups_outlined, 'Samaj Seva'),
@@ -48,22 +44,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ],
     ),
     _OnboardingData(
-      image: AppAssets.onboardingParshuramLogo,
-      background: AppAssets.parshuramHero,
-      accent: Color(0xFFFF5A1F),
-      title: 'Bhagwan Parshuram',
-      headline: 'Dharma, sahas aur seva ka sangam',
+      image: AppAssets.logo,
+      background: AppAssets.onboardingVipraSetu,
+      accent: Color(0xFF2563EB),
+      title: 'Vipra Sewa Setu',
+      headline: 'Ek manch, poore samaj ke liye',
       subtitle:
-          'Bhagwan Parshuram ke adarshon se prerit hokar samaj mein dharma, sahas aur seva ko majboot banate hain.',
-      quote: 'Dharma ki raksha, samaj ki seva',
+          'Connect the Vipra community through trusted service, support and opportunity.',
+      quote: 'Seva se samaj, sahyog se vikas',
       chips: [
-        _ChipData(Icons.shield_outlined, 'Dharma'),
-        _ChipData(Icons.groups_outlined, 'Sahas'),
-        _ChipData(Icons.favorite_border, 'Seva'),
+        _ChipData(Icons.business_center_outlined, 'Sevaen'),
+        _ChipData(Icons.handshake_outlined, 'Avsar'),
+        _ChipData(Icons.groups_outlined, 'Samuday'),
       ],
     ),
   ];
-
   @override
   Widget build(BuildContext context) {
     final page = _pages[_index];
@@ -132,9 +127,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
 class _Header extends StatelessWidget {
   const _Header({required this.accent});
-
   final Color accent;
-
   @override
   Widget build(BuildContext context) {
     final narrow = MediaQuery.sizeOf(context).width < 380;
@@ -152,7 +145,7 @@ class _Header extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: AppTheme.navy,
-                  fontSize: narrow ? 27 : 32,
+                  fontSize: narrow ? 24 : 28,
                   fontWeight: FontWeight.w900,
                   height: 1,
                 ),
@@ -164,7 +157,7 @@ class _Header extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: accent,
-                  fontSize: narrow ? 16 : 18,
+                  fontSize: narrow ? 14 : 16,
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -178,9 +171,7 @@ class _Header extends StatelessWidget {
 
 class _OnboardingCard extends StatelessWidget {
   const _OnboardingCard({required this.data});
-
   final _OnboardingData data;
-
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
@@ -202,14 +193,16 @@ class _OnboardingCard extends StatelessWidget {
       child: Column(
         children: [
           Expanded(
-            flex: compact ? 6 : 7,
+            flex: compact ? 5 : 6,
             child: _Artwork(data: data),
           ),
           Expanded(
-            flex: compact ? 7 : 6,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(20, compact ? 14 : 18, 20, 18),
+            flex: compact ? 8 : 7,
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: EdgeInsets.fromLTRB(20, compact ? 12 : 18, 20, 12),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     data.title,
@@ -218,19 +211,19 @@ class _OnboardingCard extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: data.accent,
-                      fontSize: compact ? 20 : 22,
+                      fontSize: compact ? 18 : 20,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     data.headline,
-                    maxLines: 2,
+                    maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       color: AppTheme.navy,
-                      fontSize: 29,
+                      fontSize: 23,
                       fontWeight: FontWeight.w900,
                       height: 1.06,
                     ),
@@ -243,14 +236,14 @@ class _OnboardingCard extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       color: Color(0xFF697386),
-                      fontSize: 14,
+                      fontSize: 13,
                       fontWeight: FontWeight.w700,
                       height: 1.42,
                     ),
                   ),
-                  const Spacer(),
+                  SizedBox(height: compact ? 10 : 16),
                   _ChipRow(chips: data.chips, color: data.accent),
-                  const Spacer(),
+                  SizedBox(height: compact ? 10 : 16),
                   _Quote(text: data.quote, color: data.accent),
                 ],
               ),
@@ -264,15 +257,14 @@ class _OnboardingCard extends StatelessWidget {
 
 class _Artwork extends StatelessWidget {
   const _Artwork({required this.data});
-
   final _OnboardingData data;
-
   @override
   Widget build(BuildContext context) {
     return Stack(
       fit: StackFit.expand,
       children: [
-        Image.asset(data.background, fit: BoxFit.cover, alignment: Alignment.topCenter),
+        Image.asset(data.background,
+            fit: BoxFit.cover, alignment: Alignment.topCenter),
         DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -294,7 +286,8 @@ class _Artwork extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               shape: BoxShape.circle,
-              border: Border.all(color: data.accent.withValues(alpha: .85), width: 4),
+              border: Border.all(
+                  color: data.accent.withValues(alpha: .85), width: 4),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: .18),
@@ -315,10 +308,8 @@ class _Artwork extends StatelessWidget {
 
 class _ChipRow extends StatelessWidget {
   const _ChipRow({required this.chips, required this.color});
-
   final List<_ChipData> chips;
   final Color color;
-
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -328,7 +319,8 @@ class _ChipRow extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 5),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 5),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: .09),
                   borderRadius: BorderRadius.circular(16),
@@ -361,10 +353,8 @@ class _ChipRow extends StatelessWidget {
 
 class _Quote extends StatelessWidget {
   const _Quote({required this.text, required this.color});
-
   final String text;
   final Color color;
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -386,7 +376,7 @@ class _Quote extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 color: AppTheme.navy,
-                fontSize: 15,
+                fontSize: 13,
                 fontWeight: FontWeight.w900,
               ),
             ),
@@ -403,11 +393,9 @@ class _Dots extends StatelessWidget {
     required this.active,
     required this.color,
   });
-
   final int count;
   final int active;
   final Color color;
-
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -435,11 +423,9 @@ class _ActionButton extends StatelessWidget {
     required this.color,
     required this.onPressed,
   });
-
   final bool isLast;
   final Color color;
   final VoidCallback onPressed;
-
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -462,7 +448,8 @@ class _ActionButton extends StatelessWidget {
           style: FilledButton.styleFrom(
             backgroundColor: Colors.transparent,
             shadowColor: Colors.transparent,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
           ),
           child: Row(
             children: [
@@ -478,7 +465,7 @@ class _ActionButton extends StatelessWidget {
                   fontWeight: FontWeight.w900,
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 18),
               const Icon(Icons.arrow_forward, color: Colors.white, size: 32),
             ],
           ),
@@ -499,7 +486,6 @@ class _OnboardingData {
     required this.quote,
     required this.chips,
   });
-
   final String image;
   final String background;
   final Color accent;
@@ -512,7 +498,6 @@ class _OnboardingData {
 
 class _ChipData {
   const _ChipData(this.icon, this.label);
-
   final IconData icon;
   final String label;
 }

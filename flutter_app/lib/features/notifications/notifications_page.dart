@@ -60,9 +60,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
               return ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  EmptyState(
-                    text: snapshot.error.toString(),
-                    icon: Icons.notifications_off_outlined,
+                  RetryState(
+                    message: 'Notifications could not be loaded.',
+                    onRetry: () => setState(() => _future = _load()),
                   ),
                 ],
               );

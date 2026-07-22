@@ -1114,9 +1114,7 @@ class _CreateProviderSheetState extends State<CreateProviderSheet> {
           !seen.contains(_category.text.trim().toLowerCase())) {
         uniqueNames.insert(0, _category.text.trim());
       }
-      return uniqueNames.isEmpty
-          ? _defaultProviderCategories()
-          : uniqueNames;
+      return uniqueNames.isEmpty ? _defaultProviderCategories() : uniqueNames;
     } catch (_) {
       return _defaultProviderCategories();
     }
@@ -1323,8 +1321,8 @@ class _ServiceCategoryPickerState extends State<_ServiceCategoryPicker> {
     return widget.categories.where((category) {
       final value = category.toLowerCase();
       return value.contains(query) ||
-          query.split(RegExp(r'\s+')).any((part) =>
-              part.length > 1 && value.contains(part.toLowerCase()));
+          query.split(RegExp(r'\s+')).any(
+              (part) => part.length > 1 && value.contains(part.toLowerCase()));
     }).toList();
   }
 
@@ -1334,7 +1332,8 @@ class _ServiceCategoryPickerState extends State<_ServiceCategoryPicker> {
     final filtered = _filtered;
     final query = _search.text.trim();
     final hasTypedOption = query.isNotEmpty &&
-        !widget.categories.any((item) => item.toLowerCase() == query.toLowerCase());
+        !widget.categories
+            .any((item) => item.toLowerCase() == query.toLowerCase());
     return Padding(
       padding: EdgeInsets.fromLTRB(16, 16, 16, bottom + 16),
       child: SizedBox(

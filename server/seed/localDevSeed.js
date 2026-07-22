@@ -18,6 +18,13 @@ const seedLocalDev = async () => {
     role: 'admin',
   });
 
+  await upsertUser({
+    name: 'Riya Mehta',
+    phone: process.env.DEV_TAKER_PHONE || '9521066617',
+    password: process.env.DEV_TAKER_PASSWORD || '1234567890',
+    role: 'service_taker',
+  });
+
   const provider = await upsertUser({
     name: 'Aman Sharma',
     phone: process.env.DEV_PROVIDER_PHONE || '9521066616',

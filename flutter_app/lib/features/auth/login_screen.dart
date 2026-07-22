@@ -4,7 +4,6 @@ import '../../app/app_theme.dart';
 import '../../core/api_client.dart';
 import '../../core/models.dart';
 import '../../shared/app_widgets.dart';
-import 'forgot_password_sheet.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({
@@ -74,14 +73,20 @@ class _LoginScreenState extends State<LoginScreen> {
         message.contains('127.0.0.1:27017') ||
         message.contains('Database connection') ||
         message.contains('Mongo')) {
-      return 'Backend database connect nahi ho raha. MONGO_URI set karke server restart karein.';
+      return 'Service is temporarily unavailable. Please try again shortly.';
     }
     if (message.contains('SocketException') ||
         message.contains('Connection refused') ||
         message.contains('Failed host lookup')) {
-      return 'Server connect nahi ho raha. Backend URL/server status check karein.';
+      return 'Connection issue. Please check your internet and try again.';
     }
-    return message.replaceFirst('Exception: ', '');
+    if (message.contains('Invalid mobile') || message.contains('password')) {
+      return 'Mobile number or password is incorrect.';
+    }
+    if (message.contains('already registered')) {
+      return 'This mobile number is already registered.';
+    }
+    return 'Something went wrong. Please try again.';
   }
 
   @override
@@ -352,15 +357,6 @@ class _AuthPanel extends StatelessWidget {
                 : (register ? 'Create account' : 'Login')),
           ),
           const SizedBox(height: 14),
-          if (!register)
-            TextButton(
-              onPressed: () => showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                builder: (_) => ForgotPasswordSheet(api: api),
-              ),
-              child: const Text('Forgot password?'),
-            ),
           if (role != 'service_taker')
             const Text(
               'Signup is available only for customers. Provider/Admin accounts are controlled by admin.',

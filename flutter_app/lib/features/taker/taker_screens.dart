@@ -51,16 +51,22 @@ class _TakerHomeState extends State<TakerHome> {
   }
 
   Future<List<CategoryItem>> _loadCategories() async {
+    final merged = <String, CategoryItem>{
+      for (final category in fallbackCategories)
+        category.name.trim().toLowerCase(): category,
+    };
     try {
       final data = await widget.api.get('/categories');
-      return (data['categories'] as List? ?? [])
+      for (final category in (data['categories'] as List? ?? [])
           .whereType<Map<String, dynamic>>()
           .map(CategoryItem.fromJson)
-          .where((category) => category.name.trim().isNotEmpty)
-          .toList();
+          .where((category) => category.name.trim().isNotEmpty)) {
+        merged[category.name.trim().toLowerCase()] = category;
+      }
     } catch (_) {
-      return [];
+      // Keep the built-in catalog visible when the service is unavailable.
     }
+    return merged.values.toList();
   }
 
   @override
@@ -76,14 +82,16 @@ class _TakerHomeState extends State<TakerHome> {
       child: FutureBuilder<List<CategoryItem>>(
         future: _categories,
         builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return RetryState(
+                onRetry: () => setState(() => _categories = _loadCategories()));
+          }
           final categories = snapshot.data ?? const <CategoryItem>[];
-          final mapped = categories.isEmpty
-              ? groupedTakerServices()
-              : categories
-                  .map((item) => serviceByName(item.name))
-                  .toSet()
-                  .take(18)
-                  .toList();
+          final mapped = categories
+              .map((item) => serviceByName(item.name))
+              .toSet()
+              .take(18)
+              .toList();
           final homeCategories = mapped.take(6).toList();
           final popularServices = mapped.take(4).toList();
           return TakerShellBackground(
@@ -113,6 +121,10 @@ class _TakerHomeState extends State<TakerHome> {
                   child: FutureBuilder<List<Map<String, dynamic>>>(
                     future: _ads,
                     builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        return RetryState(
+                            onRetry: () => setState(() => _ads = _loadAds()));
+                      }
                       return _HomeBannerCarousel(
                         ads: snapshot.data ?? const [],
                         onBook: _openCreateRequest,
@@ -269,16 +281,22 @@ class _TakerServicesPageState extends State<TakerServicesPage> {
   }
 
   Future<List<CategoryItem>> _loadCategories() async {
+    final merged = <String, CategoryItem>{
+      for (final category in fallbackCategories)
+        category.name.trim().toLowerCase(): category,
+    };
     try {
       final data = await widget.api.get('/categories');
-      return (data['categories'] as List? ?? [])
+      for (final category in (data['categories'] as List? ?? [])
           .whereType<Map<String, dynamic>>()
           .map(CategoryItem.fromJson)
-          .where((category) => category.name.trim().isNotEmpty)
-          .toList();
+          .where((category) => category.name.trim().isNotEmpty)) {
+        merged[category.name.trim().toLowerCase()] = category;
+      }
     } catch (_) {
-      return [];
+      // Keep the built-in catalog visible when the service is unavailable.
     }
+    return merged.values.toList();
   }
 
   Future<List<Map<String, dynamic>>> _loadAds() async {
@@ -295,7 +313,8 @@ class _TakerServicesPageState extends State<TakerServicesPage> {
     }
   }
 
-  List<ServiceCatalogGroup> _groupsFromCategories(List<CategoryItem> categories) {
+  List<ServiceCatalogGroup> _groupsFromCategories(
+      List<CategoryItem> categories) {
     if (categories.isEmpty) return serviceCatalogGroups;
 
     final backendByName = {
@@ -327,8 +346,9 @@ class _TakerServicesPageState extends State<TakerServicesPage> {
       final key = category.name.trim().toLowerCase();
       if (key.isEmpty || usedBackendNames.contains(key)) continue;
       final fallback = _catalogGroupFor(category.name);
-      final serviceNames =
-          category.serviceTypes.isEmpty ? [category.name] : category.serviceTypes;
+      final serviceNames = category.serviceTypes.isEmpty
+          ? [category.name]
+          : category.serviceTypes;
       groups.add(ServiceCatalogGroup(
         name: category.name,
         subtitle: category.description.isEmpty
@@ -373,7 +393,8 @@ class _TakerServicesPageState extends State<TakerServicesPage> {
                 (group) => ListTile(
                   leading: Icon(
                     group.icon,
-                    color: group.name == _selectedGroup ? AppTheme.saffron : null,
+                    color:
+                        group.name == _selectedGroup ? AppTheme.saffron : null,
                   ),
                   title: Text(group.name),
                   subtitle: Text(group.subtitle),
@@ -415,6 +436,10 @@ class _TakerServicesPageState extends State<TakerServicesPage> {
     return FutureBuilder<List<CategoryItem>>(
       future: _categories,
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return RetryState(
+              onRetry: () => setState(() => _categories = _loadCategories()));
+        }
         final categories = snapshot.data ?? const <CategoryItem>[];
         final groups = _groupsFromCategories(categories);
         final selectedGroup = groups.firstWhere(
@@ -543,7 +568,8 @@ class _TakerServicesPageState extends State<TakerServicesPage> {
 }
 
 class CategoryServicesPage extends StatelessWidget {
-  const CategoryServicesPage({super.key, required this.api, required this.group});
+  const CategoryServicesPage(
+      {super.key, required this.api, required this.group});
 
   final ApiClient api;
   final ServiceCatalogGroup group;
@@ -670,6 +696,12 @@ class _RequestsListState extends State<RequestsList> {
       child: FutureBuilder<List<ServiceRequestItem>>(
         future: _future,
         builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return TakerShellBackground(
+                child: ListView(children: [
+              RetryState(onRetry: () => setState(() => _future = _load()))
+            ]));
+          }
           final liveItems = snapshot.data ?? [];
           final filteredItems = liveItems
               .where((item) => _bookingMatchesFilter(item, _statusFilter))
@@ -779,6 +811,10 @@ class _CreateRequestSheetState extends State<CreateRequestSheet> {
           .toList();
       names.addAll(fallbackCategories.map((category) => category.name));
       names.addAll(takerServices.map((service) => service.name));
+      names.addAll(serviceCatalogGroups.map((group) => group.name));
+      names.addAll(serviceCatalogGroups
+          .expand((group) => group.services)
+          .map((service) => service.name));
       final unique = <String>[];
       final seen = <String>{};
       for (final name in names) {
@@ -790,6 +826,10 @@ class _CreateRequestSheetState extends State<CreateRequestSheet> {
       final names = [
         ...fallbackCategories.map((category) => category.name),
         ...takerServices.map((service) => service.name),
+        ...serviceCatalogGroups.map((group) => group.name),
+        ...serviceCatalogGroups
+            .expand((group) => group.services)
+            .map((service) => service.name),
       ];
       final unique = <String>[];
       final seen = <String>{};
@@ -2113,8 +2153,8 @@ class _ServiceCategoryHero extends StatelessWidget {
                     child: CircleAvatar(
                       radius: 17,
                       backgroundColor: Colors.white,
-                      child: Icon(group.icon,
-                          color: AppTheme.saffron, size: 19),
+                      child:
+                          Icon(group.icon, color: AppTheme.saffron, size: 19),
                     ),
                   ),
                 ],
@@ -2275,7 +2315,8 @@ class _ServiceCategoryGrid extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: AppTheme.navy.withValues(alpha: isSelected ? .12 : .06),
+                  color:
+                      AppTheme.navy.withValues(alpha: isSelected ? .12 : .06),
                   blurRadius: isSelected ? 22 : 14,
                   offset: const Offset(0, 10),
                 ),
@@ -3202,8 +3243,7 @@ class _ProviderRequestCard extends StatelessWidget {
           ],
           if (item.description.isNotEmpty) ...[
             const SizedBox(height: 8),
-            Text(item.description,
-                style: const TextStyle(height: 1.35)),
+            Text(item.description, style: const TextStyle(height: 1.35)),
           ],
           const SizedBox(height: 14),
           Text(

@@ -642,95 +642,95 @@ class ServiceImageCard extends StatelessWidget {
           child: Padding(
             padding: EdgeInsets.all(narrow ? 8 : 10),
             child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AspectRatio(
-                aspectRatio: 1.55,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(14),
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Image.asset(
-                        asset,
-                        fit: BoxFit.cover,
-                        alignment: Alignment.center,
-                      ),
-                      Positioned(
-                        right: 8,
-                        top: 8,
-                        child: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: .94),
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: .08),
-                                blurRadius: 12,
-                                offset: const Offset(0, 6),
-                              ),
-                            ],
-                          ),
-                          child: Icon(
-                            item.icon,
-                            color: _serviceAccent(item.name),
-                            size: 24,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AspectRatio(
+                  aspectRatio: 1.55,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.asset(
+                          asset,
+                          fit: BoxFit.cover,
+                          alignment: Alignment.center,
+                        ),
+                        Positioned(
+                          right: 8,
+                          top: 8,
+                          child: Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: .94),
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: .08),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              item.icon,
+                              color: _serviceAccent(item.name),
+                              size: 24,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                item.name,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: AppTheme.ink,
-                  fontSize: narrow ? 16 : 18,
-                  fontWeight: FontWeight.w900,
-                  height: 1.08,
-                ),
-              ),
-              const SizedBox(height: 7),
-              Expanded(
-                child: Text(
-                  item.subtitle,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: AppTheme.muted,
-                    fontSize: narrow ? 12 : 13,
-                    fontWeight: FontWeight.w800,
-                    height: 1.28,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(Icons.verified_outlined,
-                      color: AppTheme.emerald, size: narrow ? 15 : 16),
-                  const SizedBox(width: 4),
-                  const Expanded(
-                    child: Text(
-                      'Verified providers',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: AppTheme.ink,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w900,
-                      ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  item.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: AppTheme.ink,
+                    fontSize: narrow ? 16 : 18,
+                    fontWeight: FontWeight.w900,
+                    height: 1.08,
+                  ),
+                ),
+                const SizedBox(height: 7),
+                Expanded(
+                  child: Text(
+                    item.subtitle,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: AppTheme.muted,
+                      fontSize: narrow ? 12 : 13,
+                      fontWeight: FontWeight.w800,
+                      height: 1.28,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(Icons.verified_outlined,
+                        color: AppTheme.emerald, size: narrow ? 15 : 16),
+                    const SizedBox(width: 4),
+                    const Expanded(
+                      child: Text(
+                        'Verified providers',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: AppTheme.ink,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),

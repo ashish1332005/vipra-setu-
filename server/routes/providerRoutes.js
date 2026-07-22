@@ -23,7 +23,7 @@ const { protect, authorize } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-router.get('/', listProviders);
+router.get('/', protect, listProviders);
 router.use('/me', protect, authorize('service_provider'));
 router.get('/me', getMyProviderProfile);
 router.put('/me', updateMyProviderProfile);

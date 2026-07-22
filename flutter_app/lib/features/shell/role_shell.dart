@@ -6,7 +6,6 @@ import '../../core/models.dart';
 import '../../shared/app_widgets.dart';
 import '../admin/admin_management.dart';
 import '../admin/admin_screens.dart';
-import '../auth/change_password_sheet.dart';
 import '../booking/booking_screens.dart';
 import '../leads/leads_screens.dart';
 import '../notifications/notifications_page.dart';
@@ -76,8 +75,7 @@ class _RoleShellState extends State<RoleShell> {
               TakerHome(api: widget.api, user: widget.user)),
           NavTab('Services', Icons.grid_view_rounded,
               TakerServicesPage(api: widget.api)),
-          NavTab('Book Service', Icons.add,
-              BookServicePage(api: widget.api)),
+          NavTab('Book Service', Icons.add, BookServicePage(api: widget.api)),
           NavTab('Bookings', Icons.calendar_month_outlined,
               RequestsList(api: widget.api)),
           NavTab(
@@ -154,14 +152,6 @@ class _RoleShellState extends State<RoleShell> {
                       ),
                     ),
                     PopupMenuItem(
-                      value: _ShellAction.changePassword,
-                      child: ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: Icon(Icons.lock_reset),
-                        title: Text('Change password'),
-                      ),
-                    ),
-                    PopupMenuItem(
                       value: _ShellAction.logout,
                       child: ListTile(
                         contentPadding: EdgeInsets.zero,
@@ -233,12 +223,6 @@ class _RoleShellState extends State<RoleShell> {
             onSaved: widget.onUserChanged,
           ),
         );
-      case _ShellAction.changePassword:
-        showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          builder: (_) => ChangePasswordSheet(api: widget.api),
-        );
       case _ShellAction.logout:
         widget.onLogout();
     }
@@ -292,7 +276,7 @@ class _ShellNavItem extends StatelessWidget {
     final isBook = tab.label == 'Book Service';
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final iconColor = selected
-        ? Colors.white
+        ? AppTheme.saffron
         : isDark
             ? const Color(0xFFE6E1DE)
             : const Color(0xFF55443E);
@@ -312,23 +296,14 @@ class _ShellNavItem extends StatelessWidget {
             duration: const Duration(milliseconds: 180),
             curve: Curves.easeOutCubic,
             padding: EdgeInsets.symmetric(
-              horizontal: selected && !isBook ? 12 : 8,
+              horizontal: selected && !isBook ? 14 : 8,
               vertical: isBook ? 4 : 7,
             ),
             decoration: BoxDecoration(
               color: selected && !isBook
-                  ? AppTheme.saffron
+                  ? const Color(0xFFFFE9DE)
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(24),
-              boxShadow: selected && !isBook
-                  ? [
-                      BoxShadow(
-                        color: AppTheme.saffron.withValues(alpha: .22),
-                        blurRadius: 12,
-                        offset: const Offset(0, 6),
-                      ),
-                    ]
-                  : null,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -346,8 +321,8 @@ class _ShellNavItem extends StatelessWidget {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: AppTheme.saffron.withValues(
-                              alpha: selected ? .38 : .24),
+                          color: AppTheme.saffron
+                              .withValues(alpha: selected ? .38 : .24),
                           blurRadius: selected ? 18 : 12,
                           offset: const Offset(0, 7),
                         ),
@@ -364,7 +339,7 @@ class _ShellNavItem extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: selected && !isBook ? Colors.white : labelColor,
+                    color: selected && !isBook ? AppTheme.saffron : labelColor,
                     fontSize: isBook ? 11 : 12,
                     height: 1,
                     fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
@@ -379,7 +354,7 @@ class _ShellNavItem extends StatelessWidget {
   }
 }
 
-enum _ShellAction { editProfile, changePassword, logout }
+enum _ShellAction { editProfile, logout }
 
 class NavTab {
   const NavTab(this.label, this.icon, this.screen);
@@ -486,14 +461,6 @@ class _TakerShellHeader extends StatelessWidget {
                               contentPadding: EdgeInsets.zero,
                               leading: Icon(Icons.account_circle_outlined),
                               title: Text('Edit profile'),
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: _ShellAction.changePassword,
-                            child: ListTile(
-                              contentPadding: EdgeInsets.zero,
-                              leading: Icon(Icons.lock_reset),
-                              title: Text('Change password'),
                             ),
                           ),
                           PopupMenuItem(

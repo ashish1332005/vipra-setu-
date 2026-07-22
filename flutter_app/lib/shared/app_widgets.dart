@@ -7,6 +7,7 @@ import '../core/api_config.dart';
 import '../core/models.dart';
 
 class AppAssets {
+  static const saffronDhwaj = 'assets/generated/branding/saffron-dhwaj.webp';
   static const logo = 'assets/logo.jpeg';
   static const parshuramHero = 'assets/parshuram-hero.png';
   static const vipraSena = 'assets/viprasena.jpeg';
@@ -1352,6 +1353,38 @@ class InfoStrip extends StatelessWidget {
       ),
     );
   }
+}
+
+class RetryState extends StatelessWidget {
+  const RetryState(
+      {super.key,
+      required this.onRetry,
+      this.message =
+          'Unable to load data. Check your connection and try again.'});
+
+  final VoidCallback onRetry;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) => PremiumCard(
+        margin: const EdgeInsets.symmetric(vertical: 20),
+        child: Column(
+          children: [
+            const Icon(Icons.wifi_off_rounded,
+                color: AppTheme.deepRed, size: 38),
+            const SizedBox(height: 8),
+            Text(message,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    color: AppTheme.muted, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Retry')),
+          ],
+        ),
+      );
 }
 
 class EmptyState extends StatelessWidget {

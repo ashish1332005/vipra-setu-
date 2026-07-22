@@ -20,6 +20,8 @@ class VipraSetuApp extends StatefulWidget {
 
 class _VipraSetuAppState extends State<VipraSetuApp> {
   static const _onboardingDoneKey = 'onboardingDone';
+  static const _onboardingVersionKey = 'onboardingVersion';
+  static const _currentOnboardingVersion = 3;
   static const _selectedRoleKey = 'selectedRole';
 
   AppUser? _user;
@@ -34,8 +36,10 @@ class _VipraSetuAppState extends State<VipraSetuApp> {
   }
 
   Future<void> _bootstrap() async {
+    final splashTimer = Stopwatch()..start();
     final prefs = await SharedPreferences.getInstance();
-    _onboardingDone = prefs.getBool(_onboardingDoneKey) ?? false;
+    _onboardingDone =
+        prefs.getInt(_onboardingVersionKey) == _currentOnboardingVersion;
     _selectedRole = prefs.getString(_selectedRoleKey);
     await AppTheme.loadThemeMode();
     await widget.api.loadToken();
@@ -45,6 +49,9 @@ class _VipraSetuAppState extends State<VipraSetuApp> {
     } catch (_) {
       await widget.api.clearToken();
     }
+    const minimumSplashTime = Duration(milliseconds: 900);
+    final remaining = minimumSplashTime - splashTimer.elapsed;
+    if (!remaining.isNegative) await Future<void>.delayed(remaining);
     if (mounted) setState(() => _loading = false);
   }
 
@@ -61,6 +68,7 @@ class _VipraSetuAppState extends State<VipraSetuApp> {
   Future<void> _completeOnboarding() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_onboardingDoneKey, true);
+    await prefs.setInt(_onboardingVersionKey, _currentOnboardingVersion);
     setState(() => _onboardingDone = true);
   }
 
@@ -105,11 +113,9 @@ class _VipraSetuAppState extends State<VipraSetuApp> {
             ? const SplashScreen()
             : _user == null
                 ? !_onboardingDone
-                    ? OnboardingScreen(
-                        onDone: _completeOnboarding)
+                    ? OnboardingScreen(onDone: _completeOnboarding)
                     : _selectedRole == null
-                        ? RoleSelectionScreen(
-                            onSelected: _selectRole)
+                        ? RoleSelectionScreen(onSelected: _selectRole)
                         : LoginScreen(
                             api: widget.api,
                             role: _selectedRole!,

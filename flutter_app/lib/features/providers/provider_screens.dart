@@ -66,6 +66,12 @@ class _ProviderSearchState extends State<ProviderSearch> {
         child: FutureBuilder<List<ProviderProfile>>(
           future: _future,
           builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return AppBackground(
+                  child: ListView(children: [
+                RetryState(onRetry: () => setState(() => _future = _load()))
+              ]));
+            }
             final query = _search.text.toLowerCase();
             final providers = (snapshot.data ?? [])
                 .where((provider) => _matchesSearch(provider, query))
@@ -125,8 +131,13 @@ bool _matchesSearch(ProviderProfile provider, String query) {
 }
 
 bool _matchesCategory(ProviderProfile provider, String category) {
+  final requested =
+      category.trim().toLowerCase().replaceAll(RegExp(r'\\s+'), ' ');
+  if (requested.isEmpty || requested == 'all') return true;
+  final exactCategory =
+      provider.category.trim().toLowerCase().replaceAll(RegExp(r'\\s+'), ' ');
+  if (exactCategory == requested) return true;
   final terms = _categoryTerms(category);
-  if (terms.isEmpty) return true;
   final haystack = [
     provider.category,
     provider.businessName,
@@ -1003,8 +1014,7 @@ class _CreateServiceSheetState extends State<CreateServiceSheet> {
               if (services.isEmpty) {
                 return TextField(
                   controller: _title,
-                  decoration:
-                      const InputDecoration(labelText: 'Service title'),
+                  decoration: const InputDecoration(labelText: 'Service title'),
                 );
               }
               final selected =
@@ -1013,7 +1023,8 @@ class _CreateServiceSheetState extends State<CreateServiceSheet> {
                 initialValue: selected,
                 decoration: const InputDecoration(
                   labelText: 'Service',
-                  helperText: 'Admin category ke according service select karo.',
+                  helperText:
+                      'Admin category ke according service select karo.',
                 ),
                 items: [
                   for (final service in services)
@@ -1038,8 +1049,7 @@ class _CreateServiceSheetState extends State<CreateServiceSheet> {
             const SizedBox(height: 10),
             TextField(
               controller: _title,
-              decoration:
-                  const InputDecoration(labelText: 'New service title'),
+              decoration: const InputDecoration(labelText: 'New service title'),
             ),
           ],
           const SizedBox(height: 10),

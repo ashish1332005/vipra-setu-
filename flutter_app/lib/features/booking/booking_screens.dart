@@ -6,6 +6,7 @@ import '../../core/models.dart';
 import '../../shared/app_widgets.dart';
 import '../../shared/image_upload.dart';
 import '../providers/provider_screens.dart';
+import '../taker/taker_catalog.dart';
 
 class ServiceDetailsPage extends StatelessWidget {
   const ServiceDetailsPage(
@@ -110,22 +111,34 @@ class _BookServicePageState extends State<BookServicePage> {
   }
 
   Future<List<CategoryItem>> _loadCategories() async {
+    final merged = <String, CategoryItem>{
+      for (final category in fallbackCategories)
+        category.name.trim().toLowerCase(): category,
+      for (final group in serviceCatalogGroups)
+        group.name.trim().toLowerCase(): CategoryItem(
+          name: group.name,
+          description: group.subtitle,
+          serviceTypes: group.services.map((service) => service.name).toList(),
+        ),
+    };
     try {
       final data = await widget.api.get('/categories');
-      final categories = (data['categories'] as List? ?? [])
+      for (final category in (data['categories'] as List? ?? [])
           .whereType<Map<String, dynamic>>()
           .map(CategoryItem.fromJson)
-          .where((category) => category.name.trim().isNotEmpty)
-          .toList()
-        ..sort((a, b) => a.name.compareTo(b.name));
-      if (_category.text.trim().isNotEmpty &&
-          !categories.any((item) => item.name == _category.text.trim())) {
-        categories.insert(0, CategoryItem(name: _category.text.trim()));
+          .where((category) => category.name.trim().isNotEmpty)) {
+        merged[category.name.trim().toLowerCase()] = category;
       }
-      return categories;
     } catch (_) {
-      return [];
+      // Built-in categories remain available when the API is unavailable.
     }
+    final requested = _category.text.trim();
+    if (requested.isNotEmpty && !merged.containsKey(requested.toLowerCase())) {
+      merged[requested.toLowerCase()] = CategoryItem(name: requested);
+    }
+    final categories = merged.values.toList()
+      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    return categories;
   }
 
   CategoryItem? _selectedCategory(List<CategoryItem> categories) {
@@ -269,18 +282,18 @@ class _BookServicePageState extends State<BookServicePage> {
                 if (services.isEmpty) {
                   return TextField(
                     controller: _title,
-                    decoration:
-                        const InputDecoration(labelText: 'Service / request title'),
+                    decoration: const InputDecoration(
+                        labelText: 'Service / request title'),
                   );
                 }
-                final selected = services.contains(_title.text)
-                    ? _title.text
-                    : null;
+                final selected =
+                    services.contains(_title.text) ? _title.text : null;
                 return DropdownButtonFormField<String>(
                   initialValue: selected,
                   decoration: const InputDecoration(
                     labelText: 'Service',
-                    helperText: 'Selected category ke according service choose karo.',
+                    helperText:
+                        'Selected category ke according service choose karo.',
                   ),
                   items: [
                     for (final service in services)
@@ -308,7 +321,8 @@ class _BookServicePageState extends State<BookServicePage> {
               const SizedBox(height: 10),
               TextField(
                 controller: _title,
-                decoration: const InputDecoration(labelText: 'New service title'),
+                decoration:
+                    const InputDecoration(labelText: 'New service title'),
               ),
             ],
             const SizedBox(height: 10),

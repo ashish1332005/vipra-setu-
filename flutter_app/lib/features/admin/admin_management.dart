@@ -265,25 +265,24 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
                           decoration: const InputDecoration(
                               labelText: 'Category name')),
                       const SizedBox(height: 10),
-                       TextField(
-                           controller: _description,
-                           decoration:
-                               const InputDecoration(labelText: 'Description')),
-                       const SizedBox(height: 10),
-                       TextField(
-                         controller: _services,
-                         minLines: 3,
-                         maxLines: 6,
-                         decoration: const InputDecoration(
-                           labelText: 'Services in this category',
-                           hintText:
-                               'Example: Plumber, Electrician, AC Repair',
-                           helperText:
-                               'Comma ya new line se multiple services add karo.',
-                         ),
-                       ),
-                       const SizedBox(height: 10),
-                       ImageUploadField(
+                      TextField(
+                          controller: _description,
+                          decoration:
+                              const InputDecoration(labelText: 'Description')),
+                      const SizedBox(height: 10),
+                      TextField(
+                        controller: _services,
+                        minLines: 3,
+                        maxLines: 6,
+                        decoration: const InputDecoration(
+                          labelText: 'Services in this category',
+                          hintText: 'Example: Plumber, Electrician, AC Repair',
+                          helperText:
+                              'Comma ya new line se multiple services add karo.',
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      ImageUploadField(
                         label: 'Category image',
                         image: _image,
                         helperText: _editingCategory == null
@@ -310,13 +309,16 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
                       ),
                       title: Text((category['name'] ?? 'Category').toString()),
                       subtitle: Text([
-                        (category['description'] ?? 'No description').toString(),
+                        (category['description'] ?? 'No description')
+                            .toString(),
                         '${(category['serviceTypes'] as List? ?? []).length} services',
                       ].join(' | ')),
                       trailing: Wrap(
                         spacing: 6,
                         children: [
-                          if ((category['defaultKey'] ?? '').toString().isNotEmpty)
+                          if ((category['defaultKey'] ?? '')
+                              .toString()
+                              .isNotEmpty)
                             const Chip(label: Text('Default')),
                           Chip(
                               label: Text(category['isActive'] == false
@@ -329,10 +331,11 @@ class _CategoryManagementPageState extends State<CategoryManagementPage> {
                           ),
                           IconButton(
                             tooltip: 'Disable category',
-                            onPressed:
-                                (category['defaultKey'] ?? '').toString().isEmpty
-                                    ? () => _deleteCategory(category)
-                                    : null,
+                            onPressed: (category['defaultKey'] ?? '')
+                                    .toString()
+                                    .isEmpty
+                                ? () => _deleteCategory(category)
+                                : null,
                             icon: const Icon(Icons.delete_outline),
                             color: AppTheme.crimson,
                           ),
@@ -685,9 +688,9 @@ class _AdminPlaceholderPage extends StatelessWidget {
             ),
             const SizedBox(height: 14),
             const InfoStrip(
-                icon: Icons.api_outlined,
+                icon: Icons.auto_awesome_outlined,
                 text:
-                    'This screen has complete UI scaffolding. Full live data actions need matching backend endpoints.'),
+                    'This workspace is ready. Available actions will appear here as your account data loads.'),
           ],
         ),
       ),

@@ -1,61 +1,68 @@
+import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'api_config.dart';
 
 class ApiException implements Exception {
-  ApiException(this.message);
+  ApiException(this.message, {this.statusCode});
   final String message;
-
+  final int? statusCode;
   @override
   String toString() => message;
 }
 
 class ApiClient {
-  ApiClient({http.Client? httpClient})
-      : _httpClient = httpClient ?? http.Client();
+  ApiClient({http.Client? httpClient, FlutterSecureStorage? secureStorage})
+      : _httpClient = httpClient ?? http.Client(),
+        _secureStorage = secureStorage ?? const FlutterSecureStorage();
 
+  static const _tokenKey = 'auth_token';
+  static const _timeout = Duration(seconds: 20);
   final http.Client _httpClient;
+  final FlutterSecureStorage _secureStorage;
   String? _token;
 
   Future<void> loadToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    _token = prefs.getString('token');
+    _token = await _secureStorage.read(key: _tokenKey);
+    if (_token == null) {
+      final legacy = await SharedPreferences.getInstance();
+      final legacyToken = legacy.getString('token');
+      if (legacyToken != null && legacyToken.isNotEmpty) {
+        await _secureStorage.write(key: _tokenKey, value: legacyToken);
+        _token = legacyToken;
+      }
+      await legacy.remove('token');
+    }
   }
 
   Future<void> saveToken(String token) async {
+    if (token.isEmpty || token.length > 4096) {
+      throw ApiException('Invalid authentication token');
+    }
+    await _secureStorage.write(key: _tokenKey, value: token);
     _token = token;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('token', token);
   }
 
   Future<void> clearToken() async {
     _token = null;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('token');
+    await _secureStorage.delete(key: _tokenKey);
+    final legacy = await SharedPreferences.getInstance();
+    await legacy.remove('token');
   }
 
-  Future<Map<String, dynamic>> get(String path, {Map<String, String>? query}) {
-    return _send('GET', path, query: query);
-  }
-
-  Future<Map<String, dynamic>> post(String path, Map<String, dynamic> body) {
-    return _send('POST', path, body: body);
-  }
-
-  Future<Map<String, dynamic>> put(String path, Map<String, dynamic> body) {
-    return _send('PUT', path, body: body);
-  }
-
-  Future<Map<String, dynamic>> patch(String path, Map<String, dynamic> body) {
-    return _send('PATCH', path, body: body);
-  }
-
-  Future<Map<String, dynamic>> delete(String path) {
-    return _send('DELETE', path);
-  }
+  Future<Map<String, dynamic>> get(String path, {Map<String, String>? query}) =>
+      _send('GET', path, query: query);
+  Future<Map<String, dynamic>> post(String path, Map<String, dynamic> body) =>
+      _send('POST', path, body: body);
+  Future<Map<String, dynamic>> put(String path, Map<String, dynamic> body) =>
+      _send('PUT', path, body: body);
+  Future<Map<String, dynamic>> patch(String path, Map<String, dynamic> body) =>
+      _send('PATCH', path, body: body);
+  Future<Map<String, dynamic>> delete(String path) => _send('DELETE', path);
 
   Future<Map<String, dynamic>> _send(
     String method,
@@ -63,67 +70,55 @@ class ApiClient {
     Map<String, String>? query,
     Map<String, dynamic>? body,
   }) async {
-    final uri =
-        Uri.parse('${ApiConfig.baseUrl}$path').replace(queryParameters: query);
+    if (!path.startsWith('/') || path.contains('..')) {
+      throw ApiException('Invalid API path');
+    }
+    final uri = Uri.parse('${ApiConfig.baseUrl}$path').replace(queryParameters: query);
     final headers = <String, String>{
-      'Content-Type': 'application/json',
-      if (_token != null && _token!.isNotEmpty)
-        'Authorization': 'Bearer $_token',
+      'Accept': 'application/json',
+      'Content-Type': 'application/json; charset=utf-8',
+      if (_token?.isNotEmpty == true) 'Authorization': 'Bearer $_token',
     };
 
-    late final http.Response response;
     try {
-      if (method == 'GET') {
-        response = await _httpClient.get(uri, headers: headers);
-      } else if (method == 'POST') {
-        response = await _httpClient.post(uri,
-            headers: headers, body: jsonEncode(body ?? {}));
-      } else if (method == 'PUT') {
-        response = await _httpClient.put(uri,
-            headers: headers, body: jsonEncode(body ?? {}));
-      } else if (method == 'PATCH') {
-        response = await _httpClient.patch(uri,
-            headers: headers, body: jsonEncode(body ?? {}));
-      } else if (method == 'DELETE') {
-        response = await _httpClient.delete(uri, headers: headers);
-      } else {
-        throw ApiException('Unsupported method $method');
+      late final http.Response response;
+      switch (method) {
+        case 'GET':
+          response = await _httpClient.get(uri, headers: headers).timeout(_timeout);
+        case 'POST':
+          response = await _httpClient.post(uri, headers: headers, body: jsonEncode(body ?? {})).timeout(_timeout);
+        case 'PUT':
+          response = await _httpClient.put(uri, headers: headers, body: jsonEncode(body ?? {})).timeout(_timeout);
+        case 'PATCH':
+          response = await _httpClient.patch(uri, headers: headers, body: jsonEncode(body ?? {})).timeout(_timeout);
+        case 'DELETE':
+          response = await _httpClient.delete(uri, headers: headers).timeout(_timeout);
+        default:
+          throw ApiException('Unsupported request method');
       }
+
+      dynamic decoded;
+      try {
+        decoded = response.body.isEmpty ? <String, dynamic>{} : jsonDecode(response.body);
+      } catch (_) {
+        decoded = <String, dynamic>{};
+      }
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        if (response.statusCode == 401) await clearToken();
+        final message = decoded is Map<String, dynamic>
+            ? decoded['message']?.toString() ?? 'Request failed'
+            : 'Request failed';
+        throw ApiException(message, statusCode: response.statusCode);
+      }
+      return decoded is Map<String, dynamic> ? decoded : <String, dynamic>{'data': decoded};
+    } on TimeoutException {
+      throw ApiException('Request timed out. Please try again.');
     } on ApiException {
       rethrow;
-    } catch (error) {
-      throw ApiException(_networkErrorMessage(error, uri));
-    }
-
-    dynamic decoded;
-    try {
-      decoded = response.body.isEmpty
-          ? <String, dynamic>{}
-          : jsonDecode(response.body);
     } catch (_) {
-      decoded = <String, dynamic>{'message': response.body};
+      throw ApiException('Secure connection failed. Please check your internet connection.');
     }
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      final message = decoded is Map<String, dynamic>
-          ? decoded['message']?.toString() ?? 'Request failed'
-          : 'Request failed';
-      throw ApiException(message);
-    }
-    return decoded is Map<String, dynamic>
-        ? decoded
-        : <String, dynamic>{'data': decoded};
   }
-}
 
-String _networkErrorMessage(Object error, Uri uri) {
-  final message = error.toString();
-  if (message.contains('Failed to fetch') ||
-      message.contains('Connection refused') ||
-      message.contains('XMLHttpRequest')) {
-    return 'Backend server connect nahi ho raha (${uri.host}:${uri.port}). Server start karein aur MONGO_URI check karein.';
-  }
-  if (message.contains('Failed host lookup')) {
-    return 'Backend URL resolve nahi ho raha. API_BASE_URL check karein.';
-  }
-  return 'Network request failed. Backend server aur internet connection check karein.';
+  void close() => _httpClient.close();
 }
