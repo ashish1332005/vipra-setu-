@@ -746,6 +746,11 @@ class _ProviderServicesState extends State<ProviderServices> {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: _future,
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return AppBackground(
+            child: RetryState(onRetry: () => setState(() => _future = _load())),
+          );
+        }
         final services = snapshot.data ?? [];
         return AppBackground(
           child: ListView(

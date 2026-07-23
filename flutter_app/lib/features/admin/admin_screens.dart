@@ -70,7 +70,12 @@ class _AdminHomeState extends State<AdminHome> {
               FutureBuilder<List<Map<String, dynamic>>>(
                 future: _ads,
                 builder: (context, snapshot) {
-                  final ads = snapshot.data ?? [];
+                  if (snapshot.hasError) {
+                    return RetryState(
+                      onRetry: () => setState(() => _ads = _loadAds()),
+                    );
+                  }
+        final ads = snapshot.data ?? [];
                   if (ads.isEmpty) return const SizedBox.shrink();
                   return Padding(
                     padding: const EdgeInsets.only(top: 12),
@@ -188,6 +193,11 @@ class _AdminProvidersState extends State<AdminProviders> {
     return FutureBuilder<List<ProviderProfile>>(
       future: _future,
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return AppBackground(
+            child: RetryState(onRetry: () => setState(() => _future = _load())),
+          );
+        }
         final providers = snapshot.data ?? [];
         final categories = [
           'All Categories',
@@ -1444,6 +1454,11 @@ class _AdminAdsState extends State<AdminAds> {
     return FutureBuilder<List<AdItem>>(
       future: _future,
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return AppBackground(
+            child: RetryState(onRetry: () => setState(() => _future = _load())),
+          );
+        }
         final ads = snapshot.data ?? [];
         final top = MediaQuery.paddingOf(context).top;
         return AppBackground(
