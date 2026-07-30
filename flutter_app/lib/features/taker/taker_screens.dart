@@ -1887,6 +1887,14 @@ IconData _quickServiceIconFor(String value) {
   if (text.contains('clean')) return Icons.cleaning_services;
   if (text.contains('carpent')) return Icons.carpenter;
   if (text.contains('paint')) return Icons.format_paint;
+  if (text.contains('home services')) return Icons.home_repair_service_outlined;
+  if (text.contains('event')) return Icons.calendar_month_outlined;
+  if (text.contains('education')) return Icons.school_outlined;
+  if (text.contains('hospital')) return Icons.local_hospital_outlined;
+  if (text.contains('property') || text.contains('rent')) return Icons.real_estate_agent_outlined;
+  if (text.contains('food') || text.contains('stay')) return Icons.restaurant_outlined;
+  if (text.contains('beauty') || text.contains('wellness')) return Icons.spa_outlined;
+  if (text.contains('transport')) return Icons.directions_car_outlined;
   if (text.contains('ac')) return Icons.ac_unit;
   if (text.contains('all')) return Icons.grid_view_rounded;
   return serviceIconFor(value);
@@ -1894,6 +1902,14 @@ IconData _quickServiceIconFor(String value) {
 
 Color _quickServiceColorFor(String value) {
   final text = value.toLowerCase();
+  if (text.contains('home services')) return AppTheme.saffron;
+  if (text.contains('event')) return const Color(0xFFE879F9);
+  if (text.contains('education')) return const Color(0xFF2563EB);
+  if (text.contains('hospital')) return const Color(0xFFDC2626);
+  if (text.contains('property') || text.contains('rent')) return const Color(0xFFB45309);
+  if (text.contains('food') || text.contains('stay')) return const Color(0xFF16A34A);
+  if (text.contains('beauty') || text.contains('wellness')) return const Color(0xFFDB2777);
+  if (text.contains('transport')) return const Color(0xFF7C3AED);
   if (text.contains('electric')) return AppTheme.saffron;
   if (text.contains('plumb')) return const Color(0xFF2176FF);
   if (text.contains('clean')) return AppTheme.emerald;

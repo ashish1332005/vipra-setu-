@@ -1131,6 +1131,14 @@ class TopPickServiceCard extends StatelessWidget {
 
 IconData _serviceIcon(String value) {
   final text = value.toLowerCase();
+  if (text.contains('home services') || text == 'home') return Icons.home_repair_service_outlined;
+  if (text.contains('event')) return Icons.calendar_month_outlined;
+  if (text.contains('education')) return Icons.school_outlined;
+  if (text.contains('hospital') || text.contains('care')) return Icons.local_hospital_outlined;
+  if (text.contains('property') || text.contains('rent')) return Icons.real_estate_agent_outlined;
+  if (text.contains('food') || text.contains('stay')) return Icons.restaurant_outlined;
+  if (text.contains('beauty') || text.contains('wellness')) return Icons.spa_outlined;
+  if (text.contains('transport')) return Icons.directions_car_outlined;
   if (text.contains('pandit')) return Icons.temple_hindu_outlined;
   if (text.contains('electric')) return Icons.electrical_services_outlined;
   if (text.contains('plumb')) return Icons.plumbing_outlined;
@@ -1184,6 +1192,14 @@ IconData serviceIconFor(String value) => _serviceIcon(value);
 
 String serviceAssetFor(String value) {
   final text = value.toLowerCase();
+  if (text.contains('home services') || text == 'home') return AppAssets.categoryHomeServices;
+  if (text.contains('event')) return AppAssets.categoryEvents;
+  if (text.contains('education')) return AppAssets.categoryEducation;
+  if (text.contains('hospital') || text.contains('care')) return AppAssets.categoryHospitalCare;
+  if (text.contains('property') || text.contains('rent')) return AppAssets.categoryPropertyRent;
+  if (text.contains('food') || text.contains('stay')) return AppAssets.categoryFoodStay;
+  if (text.contains('beauty') || text.contains('wellness')) return AppAssets.categoryBeautyWellness;
+  if (text.contains('transport')) return AppAssets.categoryTransport;
   if (text.contains('pandit')) return AppAssets.servicePandit;
   if (text.contains('hospital') ||
       text.contains('medical') ||
