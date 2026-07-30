@@ -296,20 +296,26 @@ class _TakerServicesPageState extends State<TakerServicesPage> {
   }
 
   Future<List<CategoryItem>> _loadCategories() async {
-    final merged = <String, CategoryItem>{
-      for (final category in fallbackCategories)
-        category.name.trim().toLowerCase(): category,
-    };
+    // The Services tab is a category directory. Built-in service types such
+    // as Pandit Ji, Electrician and Plumber must not become category cards.
+    final merged = <String, CategoryItem>{};
     try {
       final data = await widget.api.get('/categories');
+      final serviceTypeNames = serviceCatalogGroups
+          .expand((group) => group.services)
+          .map((item) => item.name.trim().toLowerCase())
+          .toSet();
       for (final category in (data['categories'] as List? ?? [])
           .whereType<Map<String, dynamic>>()
           .map(CategoryItem.fromJson)
-          .where((category) => category.name.trim().isNotEmpty)) {
+          .where((category) {
+        final key = category.name.trim().toLowerCase();
+        return key.isNotEmpty && !serviceTypeNames.contains(key);
+      })) {
         merged[category.name.trim().toLowerCase()] = category;
       }
     } catch (_) {
-      // Keep the built-in catalog visible when the service is unavailable.
+      // The built-in top-level catalog remains visible while offline.
     }
     return merged.values.toList();
   }
@@ -450,7 +456,6 @@ class _TakerServicesPageState extends State<TakerServicesPage> {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
-    final serviceColumns = width < 520 ? 2 : 3;
     final categoryColumns = width < 680 ? 2 : 3;
     return FutureBuilder<List<CategoryItem>>(
       future: _categories,
@@ -465,7 +470,6 @@ class _TakerServicesPageState extends State<TakerServicesPage> {
           (group) => group.name == _selectedGroup,
           orElse: () => groups.first,
         );
-        final services = selectedGroup.services;
         return TakerShellBackground(
           child: RefreshIndicator(
             onRefresh: () async => setState(() {
@@ -516,66 +520,11 @@ class _TakerServicesPageState extends State<TakerServicesPage> {
                   onTap: _openCategoryServices,
                 ),
                 const SizedBox(height: 22),
-                TakerSectionHeader(
-                  title: selectedGroup.name,
-                  actionLabel: '${services.length} services',
-                ),
-                if (services.isEmpty)
-                  const EmptyState(text: 'Abhi koi created service nahi hai.')
-                else
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: services.length,
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: serviceColumns,
-                      mainAxisSpacing: 16,
-                      crossAxisSpacing: 16,
-                      // Service cards contain a thumbnail, title, description and verification row.
-                      // Keep enough height on narrow screens to prevent Flutter overflow stripes.
-                      mainAxisExtent: width < 520 ? 258 : 276,
-                    ),
-                    itemBuilder: (context, index) {
-                      final item = services[index];
-                      return ServiceImageCard(
-                        item: item,
-                        onTap: () => _openProviderSearchByCategory(item.name),
-                      );
-                    },
-                  ),
-                const SizedBox(height: 20),
-                const _TrustBanner(),
-                const SizedBox(height: 22),
-                if (services.isNotEmpty) ...[
-                  TakerSectionHeader(
-                    title: 'Most Booked Services',
-                    actionLabel: 'View All',
-                    onAction: () => _openProviderSearchByCategory(
-                      selectedGroup.services.first.name,
-                    ),
-                  ),
-                  _HorizontalServiceCards(
-                    services: services.take(6).toList(),
-                    onTap: (item) => _openProviderSearchByCategory(item.name),
-                  ),
-                ],
               ],
             ),
           ),
         );
       },
-    );
-  }
-
-  void _openProviderSearchByCategory(String category) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ProviderSearch(
-          api: widget.api,
-          initialCategory: category,
-          initialQuery: category,
-        ),
-      ),
     );
   }
 
