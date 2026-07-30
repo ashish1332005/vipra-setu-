@@ -697,17 +697,15 @@ class ServiceImageCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 7),
-                Expanded(
-                  child: Text(
-                    item.subtitle,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: AppTheme.muted,
-                      fontSize: narrow ? 12 : 13,
-                      fontWeight: FontWeight.w800,
-                      height: 1.28,
-                    ),
+                Text(
+                  item.subtitle,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: AppTheme.muted,
+                    fontSize: narrow ? 12 : 13,
+                    fontWeight: FontWeight.w800,
+                    height: 1.28,
                   ),
                 ),
                 const SizedBox(height: 8),

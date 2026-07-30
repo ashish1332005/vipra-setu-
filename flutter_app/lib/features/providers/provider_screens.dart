@@ -782,13 +782,20 @@ class _ProviderServicesState extends State<ProviderServices> {
                         contentPadding: EdgeInsets.zero,
                         leading: const Icon(Icons.design_services_outlined,
                             color: AppTheme.deepRed),
-                        title: Text((service['title'] ?? 'Service').toString(),
-                            style:
-                                const TextStyle(fontWeight: FontWeight.w800)),
-                        subtitle: Text([
-                          (service['category'] ?? '').toString(),
-                          (service['priceLabel'] ?? '').toString(),
-                        ].where((value) => value.isNotEmpty).join(' | ')),
+                        title: Text(
+                          (service['title'] ?? 'Service').toString(),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                        subtitle: Text(
+                          [
+                            (service['category'] ?? '').toString(),
+                            (service['priceLabel'] ?? '').toString(),
+                          ].where((value) => value.isNotEmpty).join(' | '),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                         trailing: Chip(
                             label: Text(
                                 (service['moderationStatus'] ?? 'pending')
@@ -942,6 +949,7 @@ class _CreateServiceSheetState extends State<CreateServiceSheet> {
     return merged.values.toList()
       ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
   }
+
   CategoryItem? _selectedCategory(List<CategoryItem> categories) {
     for (final category in categories) {
       if (category.name == _category.text) return category;
@@ -952,7 +960,8 @@ class _CreateServiceSheetState extends State<CreateServiceSheet> {
   Future<void> _save() async {
     if (_category.text.trim().isEmpty || _title.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Category aur service title select karein.')),
+        const SnackBar(
+            content: Text('Category aur service title select karein.')),
       );
       return;
     }
@@ -1187,11 +1196,15 @@ class _ProviderProfileEditSheetState extends State<ProviderProfileEditSheet> {
     }
     final current = _category.text.trim();
     if (current.isNotEmpty) names.add(current);
-    final result = names.toList()..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    final result = names.toList()
+      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
     return result;
   }
+
   Future<void> _save() async {
-    if (_name.text.trim().isEmpty || _category.text.trim().isEmpty || _city.text.trim().isEmpty) {
+    if (_name.text.trim().isEmpty ||
+        _category.text.trim().isEmpty ||
+        _city.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Name, category aur city required hain.')),
       );

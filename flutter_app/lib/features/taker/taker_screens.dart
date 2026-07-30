@@ -87,11 +87,15 @@ class _TakerHomeState extends State<TakerHome> {
                 onRetry: () => setState(() => _categories = _loadCategories()));
           }
           final categories = snapshot.data ?? const <CategoryItem>[];
-          final defaultCategoryNames = serviceCatalogGroups.map((group) => group.name).toList();
-          final defaultCategoryKeys = defaultCategoryNames.map((name) => name.toLowerCase()).toSet();
+          final defaultCategoryNames =
+              serviceCatalogGroups.map((group) => group.name).toList();
+          final defaultCategoryKeys =
+              defaultCategoryNames.map((name) => name.toLowerCase()).toSet();
           final customCategoryNames = categories
               .map((item) => item.name.trim())
-              .where((name) => name.isNotEmpty && !defaultCategoryKeys.contains(name.toLowerCase()));
+              .where((name) =>
+                  name.isNotEmpty &&
+                  !defaultCategoryKeys.contains(name.toLowerCase()));
           final mapped = [...defaultCategoryNames, ...customCategoryNames]
               .map(serviceByName)
               .toSet()
@@ -236,8 +240,8 @@ class _TakerHomeState extends State<TakerHome> {
   }
 
   void _openService(ServiceCatalogItem item) {
-    final isGroup = serviceCatalogGroups.any((group) =>
-        group.name.toLowerCase() == item.name.toLowerCase());
+    final isGroup = serviceCatalogGroups
+        .any((group) => group.name.toLowerCase() == item.name.toLowerCase());
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => isGroup
@@ -527,7 +531,9 @@ class _TakerServicesPageState extends State<TakerServicesPage> {
                       crossAxisCount: serviceColumns,
                       mainAxisSpacing: 16,
                       crossAxisSpacing: 16,
-                      childAspectRatio: width < 520 ? .78 : .82,
+                      // Service cards contain a thumbnail, title, description and verification row.
+                      // Keep enough height on narrow screens to prevent Flutter overflow stripes.
+                      mainAxisExtent: width < 520 ? 258 : 276,
                     ),
                     itemBuilder: (context, index) {
                       final item = services[index];
@@ -620,7 +626,9 @@ class CategoryServicesPage extends StatelessWidget {
                   crossAxisCount: columns,
                   mainAxisSpacing: 16,
                   crossAxisSpacing: 16,
-                  childAspectRatio: width < 520 ? .78 : .82,
+                  // Service cards contain a thumbnail, title, description and verification row.
+                  // Keep enough height on narrow screens to prevent Flutter overflow stripes.
+                  mainAxisExtent: width < 520 ? 258 : 276,
                 ),
                 itemBuilder: (context, index) {
                   final item = group.services[index];
@@ -1891,9 +1899,12 @@ IconData _quickServiceIconFor(String value) {
   if (text.contains('event')) return Icons.calendar_month_outlined;
   if (text.contains('education')) return Icons.school_outlined;
   if (text.contains('hospital')) return Icons.local_hospital_outlined;
-  if (text.contains('property') || text.contains('rent')) return Icons.real_estate_agent_outlined;
-  if (text.contains('food') || text.contains('stay')) return Icons.restaurant_outlined;
-  if (text.contains('beauty') || text.contains('wellness')) return Icons.spa_outlined;
+  if (text.contains('property') || text.contains('rent'))
+    return Icons.real_estate_agent_outlined;
+  if (text.contains('food') || text.contains('stay'))
+    return Icons.restaurant_outlined;
+  if (text.contains('beauty') || text.contains('wellness'))
+    return Icons.spa_outlined;
   if (text.contains('transport')) return Icons.directions_car_outlined;
   if (text.contains('ac')) return Icons.ac_unit;
   if (text.contains('all')) return Icons.grid_view_rounded;
@@ -1906,9 +1917,12 @@ Color _quickServiceColorFor(String value) {
   if (text.contains('event')) return const Color(0xFFE879F9);
   if (text.contains('education')) return const Color(0xFF2563EB);
   if (text.contains('hospital')) return const Color(0xFFDC2626);
-  if (text.contains('property') || text.contains('rent')) return const Color(0xFFB45309);
-  if (text.contains('food') || text.contains('stay')) return const Color(0xFF16A34A);
-  if (text.contains('beauty') || text.contains('wellness')) return const Color(0xFFDB2777);
+  if (text.contains('property') || text.contains('rent'))
+    return const Color(0xFFB45309);
+  if (text.contains('food') || text.contains('stay'))
+    return const Color(0xFF16A34A);
+  if (text.contains('beauty') || text.contains('wellness'))
+    return const Color(0xFFDB2777);
   if (text.contains('transport')) return const Color(0xFF7C3AED);
   if (text.contains('electric')) return AppTheme.saffron;
   if (text.contains('plumb')) return const Color(0xFF2176FF);
@@ -2326,7 +2340,8 @@ class _ServiceCategoryGrid extends StatelessWidget {
         crossAxisCount: columns,
         mainAxisSpacing: 14,
         crossAxisSpacing: 14,
-        childAspectRatio: columns == 2 ? .86 : 1.08,
+        // Category names and subtitles can wrap; reserve a safe vertical extent.
+        mainAxisExtent: columns == 2 ? 236 : 220,
       ),
       itemBuilder: (context, index) {
         final group = groups[index];
