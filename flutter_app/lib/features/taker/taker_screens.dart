@@ -87,8 +87,13 @@ class _TakerHomeState extends State<TakerHome> {
                 onRetry: () => setState(() => _categories = _loadCategories()));
           }
           final categories = snapshot.data ?? const <CategoryItem>[];
-          final mapped = categories
-              .map((item) => serviceByName(item.name))
+          final defaultCategoryNames = serviceCatalogGroups.map((group) => group.name).toList();
+          final defaultCategoryKeys = defaultCategoryNames.map((name) => name.toLowerCase()).toSet();
+          final customCategoryNames = categories
+              .map((item) => item.name.trim())
+              .where((name) => name.isNotEmpty && !defaultCategoryKeys.contains(name.toLowerCase()));
+          final mapped = [...defaultCategoryNames, ...customCategoryNames]
+              .map(serviceByName)
               .toSet()
               .take(18)
               .toList();
@@ -231,13 +236,17 @@ class _TakerHomeState extends State<TakerHome> {
   }
 
   void _openService(ServiceCatalogItem item) {
+    final isGroup = serviceCatalogGroups.any((group) =>
+        group.name.toLowerCase() == item.name.toLowerCase());
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => ProviderSearch(
-          api: widget.api,
-          initialCategory: item.name,
-          initialQuery: item.name,
-        ),
+        builder: (_) => isGroup
+            ? TakerServicesPage(api: widget.api, initialGroup: item.name)
+            : ProviderSearch(
+                api: widget.api,
+                initialCategory: item.name,
+                initialQuery: item.name,
+              ),
       ),
     );
   }
@@ -260,22 +269,24 @@ class _TakerHomeState extends State<TakerHome> {
 }
 
 class TakerServicesPage extends StatefulWidget {
-  const TakerServicesPage({super.key, required this.api});
+  const TakerServicesPage({super.key, required this.api, this.initialGroup});
 
   final ApiClient api;
+  final String? initialGroup;
 
   @override
   State<TakerServicesPage> createState() => _TakerServicesPageState();
 }
 
 class _TakerServicesPageState extends State<TakerServicesPage> {
-  String _selectedGroup = serviceCatalogGroups.first.name;
+  late String _selectedGroup;
   late Future<List<CategoryItem>> _categories;
   late Future<List<Map<String, dynamic>>> _ads;
 
   @override
   void initState() {
     super.initState();
+    _selectedGroup = widget.initialGroup ?? serviceCatalogGroups.first.name;
     _categories = _loadCategories();
     _ads = _loadAds(_selectedGroup);
   }
