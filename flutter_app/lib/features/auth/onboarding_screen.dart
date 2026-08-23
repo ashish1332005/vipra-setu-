@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+
 import '../../app/app_theme.dart';
 import '../../shared/app_widgets.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key, required this.onDone});
+
   final VoidCallback onDone;
+
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
@@ -12,20 +15,21 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final _controller = PageController();
   int _index = 0;
+
   final _pages = const [
     _OnboardingData(
       image: AppAssets.onboardingVipraSenaLogo,
       background: AppAssets.saffronDhwaj,
       accent: AppTheme.saffron,
       title: 'Vipra Sena',
-      headline: 'Unity in strength,\nservice with purpose',
+      headline: 'एकता में शक्ति, सेवा में समर्पण',
       subtitle:
-          'Connect the Vipra community through trusted service, support and opportunity.',
-      quote: 'Sangathit samaj, samruddh samaj',
+          'विप्र समाज को अवसरों, विश्वसनीय सेवाओं और सामाजिक सहयोग से जोड़ने वाला एक सशक्त मंच।',
+      quote: 'संगठित समाज, समृद्ध समाज',
       chips: [
-        _ChipData(Icons.diversity_3_outlined, 'Sangathan'),
-        _ChipData(Icons.volunteer_activism_outlined, 'Seva'),
-        _ChipData(Icons.groups_2_outlined, 'Ekta'),
+        _ChipData(Icons.diversity_3_outlined, 'संगठन'),
+        _ChipData(Icons.volunteer_activism_outlined, 'सेवा'),
+        _ChipData(Icons.groups_2_outlined, 'एकता'),
       ],
     ),
     _OnboardingData(
@@ -33,56 +37,82 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       background: AppAssets.onboardingBpf,
       accent: Color(0xFF2563EB),
       title: 'BPF',
-      headline: 'Ekta se vikas, seva se samman',
+      headline: 'एकता से विकास, सेवा से सम्मान',
       subtitle:
-          'Connect the Vipra community through trusted service, support and opportunity.',
-      quote: 'Samaj seva hi sachchi pooja hai',
+          'समाज सेवा, सहयोग और संस्कार के लिए हम सब मिलकर एक कदम आगे बढ़ें।',
+      quote: 'समाज सेवा ही सच्ची पूजा है',
       chips: [
-        _ChipData(Icons.groups_outlined, 'Samaj Seva'),
-        _ChipData(Icons.handshake_outlined, 'Sahyog'),
-        _ChipData(Icons.account_balance_outlined, 'Sanskar'),
+        _ChipData(Icons.groups_outlined, 'समाज सेवा'),
+        _ChipData(Icons.handshake_outlined, 'सहयोग'),
+        _ChipData(Icons.account_balance_outlined, 'संस्कार'),
       ],
     ),
     _OnboardingData(
-      image: AppAssets.logo,
-      background: AppAssets.onboardingVipraSetu,
-      accent: Color(0xFF2563EB),
-      title: 'Vipra Sewa Setu',
-      headline: 'Ek manch, poore samaj ke liye',
+      image: AppAssets.onboardingParshuramLogo,
+      background: AppAssets.parshuramHero,
+      accent: Color(0xFFFF5A1F),
+      title: 'Bhagwan Parshuram',
+      headline: 'धर्म, साहस और सेवा का संगम',
       subtitle:
-          'Connect the Vipra community through trusted service, support and opportunity.',
-      quote: 'Seva se samaj, sahyog se vikas',
+          'भगवान परशुराम के आदर्शों से प्रेरित होकर धर्म, साहस और सेवा को सशक्त बनाएं।',
+      quote: 'धर्म की रक्षा, समाज की सेवा',
       chips: [
-        _ChipData(Icons.business_center_outlined, 'Sevaen'),
-        _ChipData(Icons.handshake_outlined, 'Avsar'),
-        _ChipData(Icons.groups_outlined, 'Samuday'),
+        _ChipData(Icons.shield_outlined, 'धर्म'),
+        _ChipData(Icons.groups_outlined, 'साहस'),
+        _ChipData(Icons.favorite_border, 'सेवा'),
+      ],
+    ),
+    _OnboardingData(
+      image: AppAssets.onboardingVipraSetu,
+      background: AppAssets.onboardingVipraSetu,
+      accent: AppTheme.saffron,
+      title: 'Vipra Sewa Setu',
+      headline: 'एक मंच, पूरे समाज के लिए',
+      subtitle:
+          'सेवा, रोजगार और सहयोग के अवसरों को एक भरोसेमंद डिजिटल मंच पर जोड़ें।',
+      quote: 'सेवा से सम्मान, एकता से विकास',
+      chips: [
+        _ChipData(Icons.home_repair_service_outlined, 'सेवाएं'),
+        _ChipData(Icons.work_outline, 'अवसर'),
+        _ChipData(Icons.groups_outlined, 'समुदाय'),
       ],
     ),
   ];
+
   @override
   Widget build(BuildContext context) {
     final page = _pages[_index];
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final compact = MediaQuery.sizeOf(context).height < 700;
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFBF7),
+      backgroundColor:
+          isDark ? const Color(0xFF101318) : const Color(0xFFFFFBF7),
       body: DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Colors.white,
-              Color.lerp(const Color(0xFFFFF4EA), page.accent, .05)!,
-              const Color(0xFFFFFBF7),
-            ],
+            colors: isDark
+                ? const [
+                    Color(0xFF101318),
+                    Color(0xFF171B22),
+                    Color(0xFF101318)
+                  ]
+                : [
+                    Colors.white,
+                    Color.lerp(const Color(0xFFFFF4EA), page.accent, .05)!,
+                    const Color(0xFFFFFBF7),
+                  ],
           ),
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
+            padding: EdgeInsets.fromLTRB(
+                20, compact ? 8 : 14, 20, compact ? 12 : 20),
             child: Column(
               children: [
                 _Header(accent: page.accent),
-                const SizedBox(height: 18),
+                SizedBox(height: compact ? 8 : 18),
                 Expanded(
                   child: PageView.builder(
                     controller: _controller,
@@ -93,9 +123,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 14),
+                SizedBox(height: compact ? 8 : 14),
                 _Dots(count: _pages.length, active: _index, color: page.accent),
-                const SizedBox(height: 16),
+                SizedBox(height: compact ? 8 : 16),
                 _ActionButton(
                   isLast: _index == _pages.length - 1,
                   color: page.accent,
@@ -127,13 +157,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
 class _Header extends StatelessWidget {
   const _Header({required this.accent});
+
   final Color accent;
+
   @override
   Widget build(BuildContext context) {
     final narrow = MediaQuery.sizeOf(context).width < 380;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Row(
       children: [
-        CommunityMark(size: narrow ? 58 : 64, light: true),
+        CommunityMark(size: narrow ? 52 : 64, light: !isDark),
         const SizedBox(width: 14),
         Expanded(
           child: Column(
@@ -144,8 +177,8 @@ class _Header extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color: AppTheme.navy,
-                  fontSize: narrow ? 24 : 28,
+                  color: isDark ? Colors.white : AppTheme.navy,
+                  fontSize: narrow ? 24 : 32,
                   fontWeight: FontWeight.w900,
                   height: 1,
                 ),
@@ -157,7 +190,7 @@ class _Header extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: accent,
-                  fontSize: narrow ? 14 : 16,
+                  fontSize: narrow ? 16 : 18,
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -171,7 +204,9 @@ class _Header extends StatelessWidget {
 
 class _OnboardingCard extends StatelessWidget {
   const _OnboardingCard({required this.data});
+
   final _OnboardingData data;
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
@@ -179,7 +214,7 @@ class _OnboardingCard extends StatelessWidget {
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(30),
         border: Border.all(color: data.accent.withValues(alpha: .10)),
         boxShadow: [
@@ -193,16 +228,15 @@ class _OnboardingCard extends StatelessWidget {
       child: Column(
         children: [
           Expanded(
-            flex: compact ? 5 : 6,
+            flex: compact ? 3 : 7,
             child: _Artwork(data: data),
           ),
           Expanded(
-            flex: compact ? 8 : 7,
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: EdgeInsets.fromLTRB(20, compact ? 12 : 18, 20, 12),
+            flex: compact ? 8 : 6,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                  20, compact ? 10 : 18, 20, compact ? 10 : 18),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     data.title,
@@ -211,19 +245,19 @@ class _OnboardingCard extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: data.accent,
-                      fontSize: compact ? 18 : 20,
+                      fontSize: compact ? 20 : 22,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     data.headline,
-                    maxLines: 3,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: AppTheme.navy,
-                      fontSize: 23,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontSize: compact ? 23 : 29,
                       fontWeight: FontWeight.w900,
                       height: 1.06,
                     ),
@@ -234,16 +268,16 @@ class _OnboardingCard extends StatelessWidget {
                     maxLines: compact ? 2 : 3,
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Color(0xFF697386),
-                      fontSize: 13,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 14,
                       fontWeight: FontWeight.w700,
                       height: 1.42,
                     ),
                   ),
-                  SizedBox(height: compact ? 10 : 16),
+                  const Spacer(),
                   _ChipRow(chips: data.chips, color: data.accent),
-                  SizedBox(height: compact ? 10 : 16),
+                  const Spacer(),
                   _Quote(text: data.quote, color: data.accent),
                 ],
               ),
@@ -257,9 +291,12 @@ class _OnboardingCard extends StatelessWidget {
 
 class _Artwork extends StatelessWidget {
   const _Artwork({required this.data});
+
   final _OnboardingData data;
+
   @override
   Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).height < 700;
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -280,8 +317,8 @@ class _Artwork extends StatelessWidget {
         ),
         Center(
           child: Container(
-            width: 128,
-            height: 128,
+            width: compact ? 86 : 128,
+            height: compact ? 86 : 128,
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: Colors.white,
@@ -308,8 +345,10 @@ class _Artwork extends StatelessWidget {
 
 class _ChipRow extends StatelessWidget {
   const _ChipRow({required this.chips, required this.color});
+
   final List<_ChipData> chips;
   final Color color;
+
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -335,8 +374,8 @@ class _ChipRow extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: AppTheme.navy,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
                         fontSize: 12,
                         fontWeight: FontWeight.w900,
                       ),
@@ -353,15 +392,19 @@ class _ChipRow extends StatelessWidget {
 
 class _Quote extends StatelessWidget {
   const _Quote({required this.text, required this.color});
+
   final String text;
   final Color color;
+
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF8F1),
+        color: Theme.of(context).brightness == Brightness.dark
+            ? const Color(0xFF242A34)
+            : const Color(0xFFFFF8F1),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: color.withValues(alpha: .14)),
       ),
@@ -372,11 +415,11 @@ class _Quote extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              maxLines: 1,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: AppTheme.navy,
-                fontSize: 13,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 15,
                 fontWeight: FontWeight.w900,
               ),
             ),
@@ -393,9 +436,11 @@ class _Dots extends StatelessWidget {
     required this.active,
     required this.color,
   });
+
   final int count;
   final int active;
   final Color color;
+
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -423,14 +468,17 @@ class _ActionButton extends StatelessWidget {
     required this.color,
     required this.onPressed,
   });
+
   final bool isLast;
   final Color color;
   final VoidCallback onPressed;
+
   @override
   Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).height < 700;
     return SizedBox(
       width: double.infinity,
-      height: 62,
+      height: compact ? 52 : 62,
       child: DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(colors: [color, const Color(0xFFFF7A00)]),
@@ -458,14 +506,14 @@ class _ActionButton extends StatelessWidget {
                 const SizedBox(width: 10),
               ],
               Text(
-                isLast ? 'Get Started' : 'Next',
-                style: const TextStyle(
+                isLast ? 'शुरू करें' : 'आगे बढ़ें',
+                style: TextStyle(
                   color: Colors.white,
-                  fontSize: 22,
+                  fontSize: compact ? 18 : 22,
                   fontWeight: FontWeight.w900,
                 ),
               ),
-              const SizedBox(width: 18),
+              const Spacer(),
               const Icon(Icons.arrow_forward, color: Colors.white, size: 32),
             ],
           ),
@@ -486,6 +534,7 @@ class _OnboardingData {
     required this.quote,
     required this.chips,
   });
+
   final String image;
   final String background;
   final Color accent;
@@ -498,6 +547,7 @@ class _OnboardingData {
 
 class _ChipData {
   const _ChipData(this.icon, this.label);
+
   final IconData icon;
   final String label;
 }
