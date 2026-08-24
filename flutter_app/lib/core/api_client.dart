@@ -73,7 +73,8 @@ class ApiClient {
     if (!path.startsWith('/') || path.contains('..')) {
       throw ApiException('Invalid API path');
     }
-    final uri = Uri.parse('${ApiConfig.baseUrl}$path').replace(queryParameters: query);
+    final uri =
+        Uri.parse('${ApiConfig.baseUrl}$path').replace(queryParameters: query);
     final headers = <String, String>{
       'Accept': 'application/json',
       'Content-Type': 'application/json; charset=utf-8',
@@ -84,22 +85,32 @@ class ApiClient {
       late final http.Response response;
       switch (method) {
         case 'GET':
-          response = await _httpClient.get(uri, headers: headers).timeout(_timeout);
+          response =
+              await _httpClient.get(uri, headers: headers).timeout(_timeout);
         case 'POST':
-          response = await _httpClient.post(uri, headers: headers, body: jsonEncode(body ?? {})).timeout(_timeout);
+          response = await _httpClient
+              .post(uri, headers: headers, body: jsonEncode(body ?? {}))
+              .timeout(_timeout);
         case 'PUT':
-          response = await _httpClient.put(uri, headers: headers, body: jsonEncode(body ?? {})).timeout(_timeout);
+          response = await _httpClient
+              .put(uri, headers: headers, body: jsonEncode(body ?? {}))
+              .timeout(_timeout);
         case 'PATCH':
-          response = await _httpClient.patch(uri, headers: headers, body: jsonEncode(body ?? {})).timeout(_timeout);
+          response = await _httpClient
+              .patch(uri, headers: headers, body: jsonEncode(body ?? {}))
+              .timeout(_timeout);
         case 'DELETE':
-          response = await _httpClient.delete(uri, headers: headers).timeout(_timeout);
+          response =
+              await _httpClient.delete(uri, headers: headers).timeout(_timeout);
         default:
           throw ApiException('Unsupported request method');
       }
 
       dynamic decoded;
       try {
-        decoded = response.body.isEmpty ? <String, dynamic>{} : jsonDecode(response.body);
+        decoded = response.body.isEmpty
+            ? <String, dynamic>{}
+            : jsonDecode(response.body);
       } catch (_) {
         decoded = <String, dynamic>{};
       }
@@ -110,13 +121,16 @@ class ApiClient {
             : 'Request failed';
         throw ApiException(message, statusCode: response.statusCode);
       }
-      return decoded is Map<String, dynamic> ? decoded : <String, dynamic>{'data': decoded};
+      return decoded is Map<String, dynamic>
+          ? decoded
+          : <String, dynamic>{'data': decoded};
     } on TimeoutException {
       throw ApiException('Request timed out. Please try again.');
     } on ApiException {
       rethrow;
     } catch (_) {
-      throw ApiException('Secure connection failed. Please check your internet connection.');
+      throw ApiException(
+          'Secure connection failed. Please check your internet connection.');
     }
   }
 

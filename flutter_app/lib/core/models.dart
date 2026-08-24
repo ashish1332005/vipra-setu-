@@ -206,7 +206,6 @@ class AdItem {
               (placements.isNotEmpty ? placements.first : 'home'))
           .toString(),
       placements: placements.map((item) => item.toString()).toList(),
-
       targetCategory: (json['targetCategory'] ?? 'all').toString(),
     );
   }

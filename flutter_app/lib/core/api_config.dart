@@ -5,9 +5,12 @@ class ApiConfig {
   static const _productionUrl = 'https://vipra-setu.onrender.com/api';
 
   static String get baseUrl {
-    final value = (_overrideUrl.isNotEmpty ? _overrideUrl : _productionUrl).replaceAll(RegExp(r'/+$'), '');
+    final value = (_overrideUrl.isNotEmpty ? _overrideUrl : _productionUrl)
+        .replaceAll(RegExp(r'/+$'), '');
     final uri = Uri.tryParse(value);
-    if (uri == null || !uri.hasAuthority || (kReleaseMode && uri.scheme != 'https')) {
+    if (uri == null ||
+        !uri.hasAuthority ||
+        (kReleaseMode && uri.scheme != 'https')) {
       throw StateError('Release builds require a valid HTTPS API_BASE_URL');
     }
     if (!kReleaseMode && !const ['http', 'https'].contains(uri.scheme)) {
@@ -24,7 +27,9 @@ class ApiConfig {
       if (kReleaseMode && parsed!.scheme != 'https') return '';
       return const ['http', 'https'].contains(parsed!.scheme) ? url : '';
     }
-    final root = baseUrl.endsWith('/api') ? baseUrl.substring(0, baseUrl.length - 4) : baseUrl;
+    final root = baseUrl.endsWith('/api')
+        ? baseUrl.substring(0, baseUrl.length - 4)
+        : baseUrl;
     return url.startsWith('/') ? '$root$url' : '$root/$url';
   }
 }

@@ -4,6 +4,7 @@ import '../../app/app_theme.dart';
 import '../../core/api_client.dart';
 import '../../core/models.dart';
 import '../../shared/app_widgets.dart';
+import 'forgot_password_sheet.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({
@@ -356,6 +357,19 @@ class _AuthPanel extends StatelessWidget {
                 ? 'Please wait...'
                 : (register ? 'Create account' : 'Login')),
           ),
+          if (!register) ...[
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: busy
+                  ? null
+                  : () => showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        builder: (_) => ForgotPasswordSheet(api: api),
+                      ),
+              child: const Text('Forgot password?'),
+            ),
+          ],
           const SizedBox(height: 14),
           if (role != 'service_taker')
             const Text(

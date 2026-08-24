@@ -1848,12 +1848,15 @@ IconData _quickServiceIconFor(String value) {
   if (text.contains('event')) return Icons.calendar_month_outlined;
   if (text.contains('education')) return Icons.school_outlined;
   if (text.contains('hospital')) return Icons.local_hospital_outlined;
-  if (text.contains('property') || text.contains('rent'))
+  if (text.contains('property') || text.contains('rent')) {
     return Icons.real_estate_agent_outlined;
-  if (text.contains('food') || text.contains('stay'))
+  }
+  if (text.contains('food') || text.contains('stay')) {
     return Icons.restaurant_outlined;
-  if (text.contains('beauty') || text.contains('wellness'))
+  }
+  if (text.contains('beauty') || text.contains('wellness')) {
     return Icons.spa_outlined;
+  }
   if (text.contains('transport')) return Icons.directions_car_outlined;
   if (text.contains('ac')) return Icons.ac_unit;
   if (text.contains('all')) return Icons.grid_view_rounded;
@@ -1866,12 +1869,15 @@ Color _quickServiceColorFor(String value) {
   if (text.contains('event')) return const Color(0xFFE879F9);
   if (text.contains('education')) return const Color(0xFF2563EB);
   if (text.contains('hospital')) return const Color(0xFFDC2626);
-  if (text.contains('property') || text.contains('rent'))
+  if (text.contains('property') || text.contains('rent')) {
     return const Color(0xFFB45309);
-  if (text.contains('food') || text.contains('stay'))
+  }
+  if (text.contains('food') || text.contains('stay')) {
     return const Color(0xFF16A34A);
-  if (text.contains('beauty') || text.contains('wellness'))
+  }
+  if (text.contains('beauty') || text.contains('wellness')) {
     return const Color(0xFFDB2777);
+  }
   if (text.contains('transport')) return const Color(0xFF7C3AED);
   if (text.contains('electric')) return AppTheme.saffron;
   if (text.contains('plumb')) return const Color(0xFF2176FF);
@@ -2422,142 +2428,6 @@ class _ServiceCategoryGrid extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-class _TrustBanner extends StatelessWidget {
-  const _TrustBanner();
-
-  @override
-  Widget build(BuildContext context) {
-    final compact = MediaQuery.sizeOf(context).width < 560;
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFFEFE2), Color(0xFFFFDDBF)],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFFFD7C6)),
-      ),
-      child: Flex(
-        direction: compact ? Axis.vertical : Axis.horizontal,
-        crossAxisAlignment:
-            compact ? CrossAxisAlignment.start : CrossAxisAlignment.center,
-        children: [
-          const Icon(Icons.health_and_safety_outlined,
-              color: AppTheme.saffron, size: 54),
-          SizedBox(width: compact ? 0 : 16, height: compact ? 12 : 0),
-          if (compact)
-            const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Verified Local Professionals',
-                    style:
-                        TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
-                SizedBox(height: 5),
-                Text('Background verified, on-time service, quality assured.',
-                    style: TextStyle(
-                        color: AppTheme.muted, fontWeight: FontWeight.w800)),
-              ],
-            )
-          else
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Verified Local Professionals',
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
-                  SizedBox(height: 5),
-                  Text('Background verified, on-time service, quality assured.',
-                      style: TextStyle(
-                          color: AppTheme.muted, fontWeight: FontWeight.w800)),
-                ],
-              ),
-            ),
-          if (!compact) const SizedBox(width: 16),
-          if (!compact)
-            Image.asset(AppAssets.providerElectrician,
-                height: 92, width: 92, fit: BoxFit.cover),
-        ],
-      ),
-    );
-  }
-}
-
-class _HorizontalServiceCards extends StatelessWidget {
-  const _HorizontalServiceCards({required this.services, required this.onTap});
-
-  final List<ServiceCatalogItem> services;
-  final ValueChanged<ServiceCatalogItem> onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 172,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: services.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
-        itemBuilder: (context, index) {
-          final item = services[index];
-          return SizedBox(
-            width: 178,
-            child: PremiumCard(
-              padding: EdgeInsets.zero,
-              child: InkWell(
-                onTap: () => onTap(item),
-                borderRadius: BorderRadius.circular(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ClipRRect(
-                      borderRadius:
-                          const BorderRadius.vertical(top: Radius.circular(18)),
-                      child: Image.asset(serviceAssetFor(item.name),
-                          height: 92,
-                          width: double.infinity,
-                          fit: BoxFit.cover),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(10),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(item.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.w800)),
-                          const SizedBox(height: 6),
-                          const Row(
-                            children: [
-                              Icon(Icons.verified_outlined,
-                                  color: AppTheme.emerald, size: 16),
-                              SizedBox(width: 4),
-                              Text('Live',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.w800)),
-                              Spacer(),
-                              Text('Verified',
-                                  style: TextStyle(
-                                      color: AppTheme.saffron,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w800)),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-      ),
     );
   }
 }

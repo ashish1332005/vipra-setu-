@@ -30,12 +30,19 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
       });
       final token = data['token']?.toString();
       if (token != null) await widget.api.saveToken(token);
-      setState(() => _message = 'Password changed successfully');
+      if (mounted) setState(() => _message = 'Password changed successfully');
     } catch (error) {
-      setState(() => _message = error.toString());
+      if (mounted) setState(() => _message = error.toString());
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  @override
+  void dispose() {
+    _current.dispose();
+    _next.dispose();
+    super.dispose();
   }
 
   @override

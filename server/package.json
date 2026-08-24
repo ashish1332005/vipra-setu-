@@ -9,7 +9,8 @@
                     "start":  "node server.js",
                     "seed":  "node seed/adminSeed.js",
                     "seed:local":  "node seed/localDevSeed.js",
-                    "smoke:roles":  "node test/roleSmokeRunner.js"
+                    "smoke:roles":  "node test/roleSmokeRunner.js",
+                    "test:routes":  "node test/routeContract.js"
                 },
     "dependencies":  {
                          "bcryptjs":  "^2.4.3",

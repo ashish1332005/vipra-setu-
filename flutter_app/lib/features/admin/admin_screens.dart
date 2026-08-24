@@ -75,7 +75,7 @@ class _AdminHomeState extends State<AdminHome> {
                       onRetry: () => setState(() => _ads = _loadAds()),
                     );
                   }
-        final ads = snapshot.data ?? [];
+                  final ads = snapshot.data ?? [];
                   if (ads.isEmpty) return const SizedBox.shrink();
                   return Padding(
                     padding: const EdgeInsets.only(top: 12),
@@ -1760,7 +1760,9 @@ class _CreateAdSheetState extends State<CreateAdSheet> {
       _subtitle.text = ad.subtitle;
       _imageUrl.text = ad.imageUrl;
       _targetCategory.text = ad.targetCategory;
-      _placements..clear()..addAll(ad.placements.isNotEmpty ? ad.placements : [ad.placement]);
+      _placements
+        ..clear()
+        ..addAll(ad.placements.isNotEmpty ? ad.placements : [ad.placement]);
       if (_placements.isEmpty) _placements.add('all');
       _audienceRole = ad.audienceRole.isEmpty ? 'all' : ad.audienceRole;
       _status = ad.status.toLowerCase() == 'paused' ? 'Paused' : 'Active';
@@ -1768,7 +1770,10 @@ class _CreateAdSheetState extends State<CreateAdSheet> {
   }
 
   Future<List<String>> _loadCategories() async {
-    final names = <String>{'all', ...fallbackCategories.map((category) => category.name)};
+    final names = <String>{
+      'all',
+      ...fallbackCategories.map((category) => category.name)
+    };
     try {
       final data = await widget.api.get('/categories');
       for (final item in (data['categories'] as List? ?? [])) {
@@ -1778,14 +1783,19 @@ class _CreateAdSheetState extends State<CreateAdSheet> {
         }
       }
     } catch (_) {}
-    if (_targetCategory.text.trim().isNotEmpty) names.add(_targetCategory.text.trim());
-    return names.toList()..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    if (_targetCategory.text.trim().isNotEmpty) {
+      names.add(_targetCategory.text.trim());
+    }
+    return names.toList()
+      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
   }
 
   void _togglePlacement(String value) {
     setState(() {
       if (value == 'all') {
-        _placements..clear()..add('all');
+        _placements
+          ..clear()
+          ..add('all');
       } else {
         _placements.remove('all');
         if (_placements.contains(value)) {
@@ -1807,7 +1817,8 @@ class _CreateAdSheetState extends State<CreateAdSheet> {
         'imageUrl': _imageUrl.text.trim(),
         if (_image != null) 'imageFile': _image!.toJson(),
         'placement': _placements.contains('all') ? 'all' : _placements.first,
-        'placements': _placements.contains('all') ? ['all'] : _placements.toList(),
+        'placements':
+            _placements.contains('all') ? ['all'] : _placements.toList(),
         'targetCategory': _targetCategory.text.trim().isEmpty
             ? 'all'
             : _targetCategory.text.trim(),
@@ -1864,11 +1875,14 @@ class _CreateAdSheetState extends State<CreateAdSheet> {
             future: _categories,
             builder: (context, snapshot) {
               final categories = snapshot.data ?? const <String>[];
-              final selected = categories.contains(_targetCategory.text) ? _targetCategory.text : null;
+              final selected = categories.contains(_targetCategory.text)
+                  ? _targetCategory.text
+                  : null;
               if (categories.isEmpty) {
                 return TextField(
                   controller: _targetCategory,
-                  decoration: const InputDecoration(labelText: 'Target category'),
+                  decoration:
+                      const InputDecoration(labelText: 'Target category'),
                 );
               }
               return DropdownButtonFormField<String>(
@@ -1877,13 +1891,18 @@ class _CreateAdSheetState extends State<CreateAdSheet> {
                   labelText: 'Target category',
                   helperText: 'All = global ad; otherwise exact category only.',
                 ),
-                items: [for (final category in categories) DropdownMenuItem(value: category, child: Text(category))],
-                onChanged: (value) => setState(() => _targetCategory.text = value ?? 'all'),
+                items: [
+                  for (final category in categories)
+                    DropdownMenuItem(value: category, child: Text(category))
+                ],
+                onChanged: (value) =>
+                    setState(() => _targetCategory.text = value ?? 'all'),
               );
             },
           ),
           const SizedBox(height: 10),
-          const Text('Show ad on', style: TextStyle(fontWeight: FontWeight.w700)),
+          const Text('Show ad on',
+              style: TextStyle(fontWeight: FontWeight.w700)),
           const SizedBox(height: 6),
           Wrap(
             spacing: 8,

@@ -5,6 +5,7 @@ import '../../core/api_client.dart';
 import '../../core/models.dart';
 import '../../shared/app_widgets.dart';
 import '../admin/admin_management.dart';
+import '../auth/change_password_sheet.dart';
 import '../taker/taker_screens.dart';
 import 'profile_sheet.dart';
 
@@ -240,6 +241,15 @@ class ProfilePage extends StatelessWidget {
               onTap: () => Navigator.of(context).push(MaterialPageRoute(
                     builder: (_) => const AboutVipraSetuPage(),
                   ))),
+          _ProfileOption(
+              icon: Icons.lock_reset,
+              title: 'Change password',
+              subtitle: 'Update your account password',
+              onTap: () => showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    builder: (_) => ChangePasswordSheet(api: api),
+                  )),
           _ProfileOption(
               icon: Icons.settings_outlined,
               title: 'Language & Settings',
