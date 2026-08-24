@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 
 class ApiConfig {
   static const _overrideUrl = String.fromEnvironment('API_BASE_URL');
-  static const _productionUrl = 'https://vipra-setu.onrender.com/api';
+  static const _productionUrl = 'https://vipraseva.mathxmedia.tech/api';
 
   static String get baseUrl {
     final value = (_overrideUrl.isNotEmpty ? _overrideUrl : _productionUrl).replaceAll(RegExp(r'/+$'), '');
@@ -24,7 +24,8 @@ class ApiConfig {
       if (kReleaseMode && parsed!.scheme != 'https') return '';
       return const ['http', 'https'].contains(parsed!.scheme) ? url : '';
     }
-    final root = baseUrl.endsWith('/api') ? baseUrl.substring(0, baseUrl.length - 4) : baseUrl;
-    return url.startsWith('/') ? '$root$url' : '$root/$url';
+    final root = baseUrl;
+return url.startsWith('/') ? '$root$url' : '$root/$url';
+
   }
 }
